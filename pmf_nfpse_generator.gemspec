@@ -3,9 +3,9 @@
 Gem::Specification.new do |s|
   s.name          = 'pmf_nfpse_generator'
   s.version       = '0.0.1'
-  s.date          = '2014-04-01'
+  s.date          = '2014-04-06'
   s.summary       = "PMF (SC) NFPS-e Generator"
-  s.description   = "A gem to generate NFPS-e XML's of Florianopolis, SC, Brazil"
+  s.description   = "A gem to generate NFPS-e XML's of Florianópolis, SC, Brazil"
   s.authors       = ["Pedro Bachiega"]
   s.email         = 'pedro@pedrobachiega.com'
   s.files         = ["lib/pmf_nfpse_generator.rb"]
