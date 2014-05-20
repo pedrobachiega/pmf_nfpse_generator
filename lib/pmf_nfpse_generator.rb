@@ -52,7 +52,15 @@ module PmfNfpseGenerator
 
     #TODO tratar melhor se já tiver a cidade
     city = get_city_info(content['zipcode'].gsub(".",""))
-    cst = content['cst'].blank? ? "0" : content['cst']
+    cst = (content['cst'].nil? || content['cst'].empty?) ? "0" : content['cst']
+
+    data = ""
+    if content['billing_date'].respond_to?(:strftime)
+      data = content['billing_date'].strftime('%Y-%m-%d')
+    end
+
+    #TODO split email para pegar apenas o primeiro
+    email = content['email']
 
     xml = Builder::XmlMarkup.new( :indent => 2 )
     xml.instruct! :xml, :encoding => "UTF-8"
@@ -64,7 +72,7 @@ module PmfNfpseGenerator
         aedf.AEDF "#{config.Emissor_AEDF}"
         aedf.TipoAedf "#{config.Emissor_TipoAedf}"
       end
-      root.DataEmissao "#{content['billing_date'].try(:strftime, '%Y-%m-%d')}Z"
+      root.DataEmissao "#{data}Z"
 
       if city["cidade"] == "#{config.Emissor_Cidade}"
         root.CFPS "9201"
@@ -79,7 +87,7 @@ module PmfNfpseGenerator
         issqn = 0
         total = 0
 
-        if !content['price_product'].blank? && content['price_product'].gsub("R$", "").to_i != 0
+        if !(content['price_product'].nil? || content['price_product'].empty?) && content['price_product'].gsub("R$", "").to_i != 0
           price = content['price_product'].gsub("R$", "").gsub(" ", "").gsub(",", ".").to_f
           aliquota = 0.02
           issqn += (price * aliquota).round(2)
@@ -95,7 +103,7 @@ module PmfNfpseGenerator
             item.ValorTotal price
           end
         end
-        if !content['price_others'].blank? && content['price_others'].gsub("R$", "").to_i != 0
+        if !(content['price_others'].nil? || content['price_others'].empty?) && content['price_others'].gsub("R$", "").to_i != 0
           price = content['price_others'].gsub("R$", "").gsub(" ", "").gsub(",", ".").to_f
           aliquota = 0.02
           issqn += (price * aliquota).round(2)
@@ -112,7 +120,7 @@ module PmfNfpseGenerator
           end
         end
 
-        if !content['price_consultancy'].blank? && content['price_consultancy'].gsub("R$", "").to_i != 0
+        if !(content['price_consultancy'].nil? || content['price_consultancy'].empty?) && content['price_consultancy'].gsub("R$", "").to_i != 0
           price = content['price_consultancy'].gsub("R$", "").gsub(" ", "").gsub(",", ".").to_f
           aliquota = 0.02
           issqn += (price * aliquota).round(2)
@@ -128,7 +136,7 @@ module PmfNfpseGenerator
             item.ValorTotal price
           end
         end
-        if !content['price_courses'].blank? && content['price_courses'].gsub("R$", "").to_i != 0
+        if !(content['price_courses'].nil? || content['price_courses'].empty?) && content['price_courses'].gsub("R$", "").to_i != 0
           price = content['price_courses'].gsub("R$", "").gsub(" ", "").gsub(",", ".").to_f
           aliquota = 0.02
           issqn += (price * aliquota).round(2)
@@ -144,7 +152,7 @@ module PmfNfpseGenerator
             item.ValorTotal price
           end
         end
-        if !content['price_events'].blank? && content['price_events'].gsub("R$", "").to_i != 0
+        if !(content['price_events'].nil? || content['price_events'].empty?) && content['price_events'].gsub("R$", "").to_i != 0
           price = content['price_events'].gsub("R$", "").gsub(" ", "").gsub(",", ".").to_f
           aliquota = 0.02
           issqn += (price * aliquota).round(2)
@@ -161,12 +169,18 @@ module PmfNfpseGenerator
           end
         end
 
-        servicos.BaseCalculo total
-        servicos.ValorISSQN issqn
-        servicos.ValorTotalServicos total
+        servicos.BaseCalculo total.round(2)
+        servicos.ValorISSQN issqn.round(2)
+        servicos.ValorTotalServicos total.round(2)
 
         extra_info = content['extra_info']
-        # IRRF (1,5%): R$ 11,25
+        # CSRF (4,65%)
+        if total > 5000
+          csrf = (total*0.0465).round(2).to_s.gsub(".", ",")
+          extra_info = "CSRF (4,65%): R$ #{csrf} 
+          #{extra_info}"
+        end
+        # IRRF (1,5%)
         if total > 666.66
           ir = (total*0.015).round(2).to_s.gsub(".", ",")
           extra_info = "IRRF (1,5%): R$ #{ir} 
@@ -179,11 +193,14 @@ module PmfNfpseGenerator
           identificacao.DocIdTomador do |doc|
             cpf_cnpj = content['cpf_cnpj'].gsub(".", "").gsub("/", "").gsub("-", "").gsub(" ", "")
 
+            #TODO
             doc.CPFCNPJ do |cpfcnpj|
               if (cpf_cnpj.size == 14)
                 cpfcnpj.CNPJ cpf_cnpj
-              else
+              elsif (cpf_cnpj.size == 11)
                 cpfcnpj.CPF cpf_cnpj
+              else
+                raise "incorrect CPF or CNPJ '#{cpf_cnpj}'"
               end
             end
           end # doc
@@ -199,10 +216,10 @@ module PmfNfpseGenerator
           endereco.CodigoPostal do |codPostal|
             codPostal.CEP content['zipcode'].gsub(".", "").gsub("/", "").gsub("-", "").gsub(" ", "")
           end
-          endereco.UF content['state']
+          endereco.UF content['state'].gsub(" ", "")
         end # endereço
         tomador.Contato do |contato|
-          contato.Email content['email']
+          contato.Email email[0..79]
         end
 
       end # tomador
@@ -269,14 +286,14 @@ module PmfNfpseGenerator
 
     rows = Array.new
     parsed_file[1..-1].each_with_index do |row, i|
-      unless row[0].blank?
+      unless (row[0].nil? || row[0].empty?)
         row_map = {}
         row.each_with_index do |value, index|
           if list[index] == "billing_date"
             begin
               value = DateTime.strptime(value, '%d/%b/%Y')
             rescue => e
-              value = DateTime.strptime(value, '%d/%m/%y')
+              value = DateTime.strptime(value, '%d/%m/%Y')
             end
             row_map[list[index]] = value || ""
           else
