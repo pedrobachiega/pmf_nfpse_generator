@@ -8,6 +8,7 @@ module PmfNfpseGenerator
 
   class << self
     attr_accessor :config
+    attr_accessor :cities
   end
 
   def self.configure
@@ -16,7 +17,7 @@ module PmfNfpseGenerator
   end
 
   class Configuration
-    attr_accessor :TipoSistema, :Emissor_Identificacao, :Emissor_AEDF, :Emissor_TipoAedf, :Emissor_Cidade, :Emissor_Estado
+    attr_accessor :TipoSistema, :Emissor_Identificacao, :Emissor_AEDF, :Emissor_TipoAedf, :Emissor_Cidade, :Emissor_Estado, :Impostos
   end
 
 
@@ -28,39 +29,46 @@ module PmfNfpseGenerator
   end
 
   def self.create_nfpse_xmls_from_csv(contents)
+    count_total = 0
+    count_errors = 0
     items = parse(contents)
     items.each_with_index do |row, i| 
+      count_total = count_total + 1
       begin
         create_nfpse_xml(row, i)
       rescue => e
+        count_errors = count_errors + 1
         p "--------------"
         p "#{i} : #{row}"
         p e
         p "--------------"
       end
     end
+    p "Total: #{count_total} / #{count_errors} erros"
 
     true
   end
 
   def self.create_nfpse_xml(content, outname = "")
     xml = gen_xml(content)
-    File.open("out/#{outname.to_s.rjust(10, '0')}.xml", 'w') {|f| f.write(xml) }
+    dir = (config.TipoSistema=="1" ? "producao" : "homologacao")
+    File.open("#{dir}/#{outname.to_s.rjust(10, '0')}.xml", 'w') {|f| f.write(xml) }
   end
 
   def self.gen_xml(content)
-
-    #TODO tratar melhor se já tiver a cidade
-    city = get_city_info(content['zipcode'].gsub(".",""))
+    # {"city"=>"Curitiba", "state"=>"PR", "city_ibge_code"=>"4106902", "source"=>"csv"}
+    city = get_city_info(content['zipcode'].gsub(".",""), content['state'], content['city'])
     cst = (content['cst'].nil? || content['cst'].empty?) ? "0" : content['cst']
 
-    data = ""
+    date = ""
     if content['billing_date'].respond_to?(:strftime)
-      data = content['billing_date'].strftime('%Y-%m-%d')
+      date = content['billing_date']
+      now = DateTime.strptime("#{DateTime.now.day}/#{DateTime.now.month}/#{DateTime.now.year}", '%d/%m/%Y')
+      raise "Date at the future" if date != now && date > now
+      date = date.strftime('%Y-%m-%d')
     end
 
-    #TODO split email para pegar apenas o primeiro
-    email = content['email']
+    email = content['email'].split(",")[0]
 
     xml = Builder::XmlMarkup.new( :indent => 2 )
     xml.instruct! :xml, :encoding => "UTF-8"
@@ -72,11 +80,11 @@ module PmfNfpseGenerator
         aedf.AEDF "#{config.Emissor_AEDF}"
         aedf.TipoAedf "#{config.Emissor_TipoAedf}"
       end
-      root.DataEmissao "#{data}Z"
+      root.DataEmissao "#{date}Z"
 
-      if city["cidade"] == "#{config.Emissor_Cidade}"
+      if city["city"] == "#{config.Emissor_Cidade}"
         root.CFPS "9201"
-      elsif city["estado"] == "#{config.Emissor_Estado}"
+      elsif city["state"] == "#{config.Emissor_Estado}"
         root.CFPS "9202"
       else
         root.CFPS "9203"
@@ -93,9 +101,9 @@ module PmfNfpseGenerator
           issqn += (price * aliquota).round(2)
           total += price
           servicos.ItemServico do |item| 
-            item.IdCNAE "9179"
-            item.CodigoAtividade "6201500"
-            item.DescricaoServico "SERVIÇO DE DESENVOLVIMENTO E SUPORTE DE MARKETING DIGITAL"
+            item.IdCNAE "9178"
+            item.CodigoAtividade "6203100"
+            item.DescricaoServico "SERVIÇO DE DESENVOLVIMENTO E LICENCIAMENTO DE PROGRAMA DE MARKETING DIGITAL - RD STATION"
             item.CST cst
             item.Aliquota aliquota
             item.ValorUnitario price
@@ -128,7 +136,7 @@ module PmfNfpseGenerator
           servicos.ItemServico do |item| 
             item.IdCNAE "9177"
             item.CodigoAtividade "6204000"
-            item.DescricaoServico "CONSULTORIA EM TECNOLOGIA DA INFORMAÇÃO E MARKETING DIGITAL"
+            item.DescricaoServico "CONSULTORIA EM TECNOLOGIA DA INFORMAÇÃO E MARKETING DIGITAL - RD STATION"
             item.CST cst
             item.Aliquota aliquota
             item.ValorUnitario price
@@ -144,7 +152,7 @@ module PmfNfpseGenerator
           servicos.ItemServico do |item| 
             item.IdCNAE "9177"
             item.CodigoAtividade "6204000"
-            item.DescricaoServico "CONSULTORIA EM TECNOLOGIA DA INFORMAÇÃO E MARKETING DIGITAL"
+            item.DescricaoServico "MARKETING DIGITAL"
             item.CST cst
             item.Aliquota aliquota
             item.ValorUnitario price
@@ -160,7 +168,7 @@ module PmfNfpseGenerator
           servicos.ItemServico do |item| 
             item.IdCNAE "9177"
             item.CodigoAtividade "6204000"
-            item.DescricaoServico "CONSULTORIA EM TECNOLOGIA DA INFORMAÇÃO E MARKETING DIGITAL"
+            item.DescricaoServico "MARKETING DIGITAL"
             item.CST cst
             item.Aliquota aliquota
             item.ValorUnitario price
@@ -177,21 +185,31 @@ module PmfNfpseGenerator
         # CSRF (4,65%)
         if total > 5000
           csrf = (total*0.0465).round(2).to_s.gsub(".", ",")
-          extra_info = "CSRF (4,65%): R$ #{csrf} 
-          #{extra_info}"
+          extra_info = "#{extra_info}
+CSRF (4,65%): R$ #{csrf}"
         end
         # IRRF (1,5%)
         if total > 666.66
           ir = (total*0.015).round(2).to_s.gsub(".", ",")
-          extra_info = "IRRF (1,5%): R$ #{ir} 
-          #{extra_info}"
+          extra_info = "#{extra_info}
+IRRF (1,5%): R$ #{ir}"
         end
+
+        # config.Impostos = { :pis => 0.0065; :cofins => 0.03; :iss => 0.02; :cprb => 0.02 }
+        taxesV = config.Impostos[:pis] + config.Impostos[:cofins] + config.Impostos[:iss] + config.Impostos[:cprb]
+        taxesS = (total*taxesV).round(2).to_s.gsub(".", ",")
+        taxesV = (taxesV*100).round(2).to_s.gsub(".", ",")
+
+        extra_info = "#{extra_info}
+
+Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{taxesS} (#{taxesV}%)"
+
         servicos.DadosAdicionais extra_info
       end
       root.Tomador do |tomador|
         tomador.IdentificacaoTomador do |identificacao|
           identificacao.DocIdTomador do |doc|
-            cpf_cnpj = content['cpf_cnpj'].gsub(".", "").gsub("/", "").gsub("-", "").gsub(" ", "")
+            cpf_cnpj = content['cpf_cnpj'].gsub(".", "").gsub("/", "").gsub("-", "").gsub("_", "").gsub(" ", "")
 
             #TODO
             doc.CPFCNPJ do |cpfcnpj|
@@ -200,7 +218,7 @@ module PmfNfpseGenerator
               elsif (cpf_cnpj.size == 11)
                 cpfcnpj.CPF cpf_cnpj
               else
-                raise "incorrect CPF or CNPJ '#{cpf_cnpj}'"
+                raise "Incorrect CPF or CNPJ '#{cpf_cnpj}'"
               end
             end
           end # doc
@@ -211,7 +229,7 @@ module PmfNfpseGenerator
           endereco.Logradouro content['address'][0..79]
           endereco.Bairro ""
           endereco.Municipio do |municipio| 
-            municipio.CodigoMunicipio city["cidade_info"]["codigo_ibge"]
+            municipio.CodigoMunicipio city["city_ibge_code"]
           end
           endereco.CodigoPostal do |codPostal|
             codPostal.CEP content['zipcode'].gsub(".", "").gsub("/", "").gsub("-", "").gsub(" ", "")
@@ -261,15 +279,15 @@ module PmfNfpseGenerator
         elsif column == "cfps"
           list << "cfps"
 
-        elsif column == "valor_produto" || column == "produto"
+        elsif column == "valor_produto" || column == "produto" || column == "valor produto"
           list << "price_product"
-        elsif column == "valor_consultoria" || column == "consultoria"
+        elsif column == "valor_consultoria" || column == "consultoria" || column == "valor consultoria"
           list << "price_consultancy"
-        elsif column == "valor_outros" || column == "outros"
+        elsif column == "valor_outros" || column == "outros" || column == "valor outros"
           list << "price_others"
-        elsif column == "valor_cursos" || column == "curso"
+        elsif column == "valor_cursos" || column == "curso" || column == "valor cursos"
           list << "price_courses"
-        elsif column == "valor_eventos" || column == "eventos"
+        elsif column == "valor_eventos" || column == "eventos" || column == "valor eventos"
           list << "price_events"
 
         elsif column == "cst"
@@ -293,7 +311,7 @@ module PmfNfpseGenerator
             begin
               value = DateTime.strptime(value, '%d/%b/%Y')
             rescue => e
-              value = DateTime.strptime(value, '%d/%m/%Y')
+              value = (value.size == 10) ? DateTime.strptime(value, '%d/%m/%Y') : DateTime.strptime(value, '%d/%m/%y')
             end
             row_map[list[index]] = value || ""
           else
@@ -308,9 +326,45 @@ module PmfNfpseGenerator
     rows
   end
 
-  def self.get_city_info(cep)
-    response = HTTParty.get("http://api.postmon.com.br/v1/cep/#{cep}")
-    response.parsed_response
+  def self.get_city_info(cep, state = "", cityname = "")
+    state.strip!
+    cityname.strip!
+    cityname = (cityname.downcase == "brasilia") ? "brasília" : cityname
+    cityname = (cityname.downcase == "sao paulo") ? "são paulo" : cityname
+
+    city_info = self.get_cities[state.downcase][cityname.downcase]
+    if city_info
+      { "city" => city_info["Nome_Município"], "state" => city_info["UF"], "city_ibge_code" => city_info["UF_MUNIC"], "source" => "csv" }
+    else
+      cep.strip!
+      cep = cep.gsub(".", "").gsub("/", "").gsub("-", "").gsub(" ", "")
+      response = HTTParty.get("http://api.postmon.com.br/v1/cep/#{cep}")
+      resp = response.parsed_response
+      { "city" => resp["cidade"], "state" => resp["estado"], "city_ibge_code" => resp["cidade_info"]["codigo_ibge"], "source" => "postmon" }
+    end
+  end
+
+  def self.get_cities
+    self.cities ||= self.load_cities
+  end
+
+  def self.load_cities
+    contents =  File.read(self.filepath('cidades_brasil.csv'))
+    lines_parsed = CSV.parse(contents, { :col_sep => "," })
+    # UF,UF_MUNIC,Nome_Município
+
+    list = {}
+    lines_parsed.each_with_index do |line, i|
+      if (i > 0 && !line.empty?)
+        list[line[0].downcase] = {} if list[line[0].downcase] == nil
+        list[line[0].downcase][line[2].downcase] = { "UF" => line[0], "UF_MUNIC" => line[1], "Nome_Município" => line[2] }
+      end
+    end
+    list
+  end
+
+  def self.filepath(filename)
+    File.join(File.dirname(File.expand_path(__FILE__)), filename)
   end
 
 end

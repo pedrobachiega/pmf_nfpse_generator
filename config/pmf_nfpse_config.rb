@@ -9,4 +9,6 @@ PmfNfpseGenerator.configure do |config|
 
   config.Emissor_Cidade = "Florianópolis"
   config.Emissor_Estado = "SC"
+
+  config.Impostos = { :pis => 0.0065, :cofins => 0.03, :iss => 0.02, :cprb => 0.02 };
 end
