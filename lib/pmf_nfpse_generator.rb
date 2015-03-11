@@ -38,10 +38,9 @@ module PmfNfpseGenerator
         create_nfpse_xml(row, i)
       rescue => e
         count_errors = count_errors + 1
-        p "--------------"
-        p "#{i} : #{row}"
+        p "#{i} #{row.to_s[0..170]}"
         p e
-        p "--------------"
+        p "------"
       end
     end
     p "Total: #{count_total} / #{count_errors} erros"
@@ -218,7 +217,7 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
               elsif (cpf_cnpj.size == 11)
                 cpfcnpj.CPF cpf_cnpj
               else
-                raise "Incorrect CPF or CNPJ '#{cpf_cnpj}'"
+                raise "Wrong CPF/CNPJ '#{cpf_cnpj}'"
               end
             end
           end # doc
