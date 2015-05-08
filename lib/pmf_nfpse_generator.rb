@@ -10,9 +10,10 @@ class PmfNfpseGenerator
 
   attr_accessor :config
   attr_accessor :cities
-  attr_accessor :zipcode, :state, :city, :cst, :billing_date, :email, :price_product, :price_others, :price_consultancy, :price_courses, :price_events, :extra_info
+  attr_accessor :zipcode, :state, :city, :cst, :billing_date, :email, :price_product, :price_others, :price_consultancy, :price_courses, :price_events, :extra_info, :cpf_cnpj, :name, :address
 
   validates_presence_of :zipcode
+  validates_presence_of :cpf_cnpj
 
   def initialize(attrs = {})
     self.zipcode = attrs[:zipcode]
@@ -28,6 +29,9 @@ class PmfNfpseGenerator
     self.price_courses = attrs[:price_courses]
     self.price_events = attrs[:price_events]
     self.extra_info = attrs[:extra_info]
+    self.cpf_cnpj = attrs[:cpf_cnpj]
+    self.name = attrs[:name]
+    self.address = attrs[:address]
   end
 
   def configure
@@ -191,24 +195,24 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
       root.Tomador do |tomador|
         tomador.IdentificacaoTomador do |identificacao|
           identificacao.DocIdTomador do |doc|
-            cpf_cnpj = content['cpf_cnpj'].gsub(".", "").gsub("/", "").gsub("-", "").gsub("_", "").gsub(" ", "")
+            formated_cpf_cnpj = format_cpf_cnpj
 
             #TODO
             doc.CPFCNPJ do |cpfcnpj|
-              if (cpf_cnpj.size == 14)
-                cpfcnpj.CNPJ cpf_cnpj
-              elsif (cpf_cnpj.size == 11)
-                cpfcnpj.CPF cpf_cnpj
+              if (formated_cpf_cnpj.size == 14)
+                cpfcnpj.CNPJ formated_cpf_cnpj
+              elsif (formated_cpf_cnpj.size == 11)
+                cpfcnpj.CPF formated_cpf_cnpj
               else
-                raise "Wrong CPF/CNPJ '#{cpf_cnpj}'"
+                raise "Wrong CPF/CNPJ '#{formated_cpf_cnpj}'"
               end
             end
           end # doc
         end # identificacao
 
-        tomador.RazaoSocial content['name'][0..79]
+        tomador.RazaoSocial name[0..79]
         tomador.Endereco do |endereco|
-          endereco.Logradouro content['address'][0..79]
+          endereco.Logradouro address[0..79]
           endereco.Bairro ""
           endereco.Municipio do |municipio|
             municipio.CodigoMunicipio city_info["city_ibge_code"]
@@ -227,6 +231,10 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
   end
 
   private
+
+  def format_cpf_cnpj
+    cpf_cnpj.gsub(".", "").gsub("/", "").gsub("-", "").gsub("_", "").gsub(" ", "")
+  end
 
   def get_city_info(cep, state = "", cityname = "")
 

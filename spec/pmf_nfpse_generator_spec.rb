@@ -5,7 +5,7 @@ describe PmfNfpseGenerator do
   let(:attrs) do
      {
        billing_date: Time.parse("2015-01-01"),
-       cpf_cnpj: "",
+       cpf_cnpj: "00.000.000/0000-00",
        name: "",
        address: "",
        city: "",
@@ -40,13 +40,13 @@ describe PmfNfpseGenerator do
        end
      end
 
-     it "generate a xlm" do
+     it "generate a xml" do
        VCR.use_cassette('to_xml') do
          expect(lib.to_xml!).to be
        end
      end
 
-     describe "raise erro" do
+     describe "validate" do
 
        let(:invalid_lib) { PmfNfpseGenerator.new }
 
@@ -55,8 +55,9 @@ describe PmfNfpseGenerator do
          expect(invalid_lib.errors[:zipcode].size).to eq(1)
        end
 
-       it "zipcode invalid format" do
-        fail
+       it "without cpf_cnpj" do
+         expect(invalid_lib.to_xml!).to be_falsey
+         expect(invalid_lib.errors[:cpf_cnpj].size).to eq(1)
        end
      end
    end
