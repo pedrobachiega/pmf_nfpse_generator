@@ -12,14 +12,13 @@ class PmfNfpseGenerator
   attr_accessor :cities
   attr_accessor :zipcode, :state, :city, :cst, :billing_date, :email, :price_product, :price_others, :price_consultancy, :price_courses, :price_events, :extra_info, :cpf_cnpj, :name, :address
 
-  validates_presence_of :zipcode
-  validates_presence_of :cpf_cnpj
+  validates_presence_of :zipcode, :state, :city, :cst, :billing_date, :email, :price_product, :price_others, :price_consultancy, :price_courses, :price_events, :extra_info, :cpf_cnpj, :name, :address
 
   def initialize(attrs = {})
     self.zipcode = attrs[:zipcode]
     self.state = attrs[:state]
     self.city = attrs[:city]
-    self.cst = (attrs['cst'].nil? || attrs['cst'].empty?) ? "0" : attrs['cst']
+    self.cst = (attrs[:cst].nil? || attrs[:cst].empty?) ? "0" : attrs[:cst]
     self.billing_date = attrs[:billing_date]
     self.email = attrs[:email]
 
