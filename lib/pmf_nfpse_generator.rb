@@ -48,7 +48,7 @@ class PmfNfpseGenerator
     city_info = get_city_info(zipcode.gsub(".",""), state, city)
     date = ""
     if billing_date.respond_to?(:strftime)
-      date = billing_date
+      date = DateTime.strptime("#{billing_date.day}/#{billing_date.month}/#{billing_date.year}", '%d/%m/%Y')
       now = DateTime.strptime("#{DateTime.now.day}/#{DateTime.now.month}/#{DateTime.now.year}", '%d/%m/%Y')
       raise "Date at the future" if date != now && date > now
       date = date.strftime('%Y-%m-%d')
@@ -82,7 +82,7 @@ class PmfNfpseGenerator
 
         items.each do |_item|
           # {:price=>919, :cnae_id=>"9178", :cnae_code=>"6203100", :cnae_desc=>"SERVIÇO DE LICENCIAMENTO DE PROGRAMA DE MARKETING DIGITAL - RD STATION", :cnae_aliquota=>0.02, :cst=>"0"}
-          price = _item[:price].gsub("R$", "").gsub(" ", "").gsub(",", ".").to_f
+          price = _item[:price].to_f
           aliquota = _item[:cnae_aliquota]
           issqn += (price * aliquota).round(2)
           total += price
