@@ -46,13 +46,15 @@ class PmfNfpseGenerator
     return nil unless self.valid?
 
     city_info = get_city_info(zipcode.gsub(".",""), state, city)
-    date = ""
-    if billing_date.respond_to?(:strftime)
-      date = DateTime.strptime("#{billing_date.day}/#{billing_date.month}/#{billing_date.year}", '%d/%m/%Y')
-      now = DateTime.strptime("#{DateTime.now.day}/#{DateTime.now.month}/#{DateTime.now.year}", '%d/%m/%Y')
-      raise "Date at the future" if date != now && date > now
-      date = date.strftime('%Y-%m-%d')
-    end
+    date = DateTime.strptime(billing_date, '%d/%m/%Y')
+    now = DateTime.strptime("#{DateTime.now.day}/#{DateTime.now.month}/#{DateTime.now.year}", '%d/%m/%Y')
+    raise "Date at the future" if date != now && date > now
+    date = date.strftime('%Y-%m-%d')
+
+    puts "*" * 100
+    puts date
+    puts billing_date
+    puts "*" * 100
 
     xml = Builder::XmlMarkup.new( :indent => 2 )
     xml.instruct! :xml, :encoding => "UTF-8"

@@ -5,7 +5,7 @@ describe PmfNfpseGenerator do
   let(:items) { [{:price=>919, :cnae_id=>"9178", :cnae_code=>"6203100", :cnae_desc=>"SERVIÇO DE LICENCIAMENTO DE PROGRAMA DE MARKETING DIGITAL - RD STATION", :cnae_aliquota=>0.02, :cst=>"0"}] }
   let(:attrs) do
      {
-       billing_date: Time.parse("2015-01-01"),
+       billing_date: "01/01/2015",
        cpf_cnpj: "00.000.000/0000-00",
        name: "name",
        address: "address",
