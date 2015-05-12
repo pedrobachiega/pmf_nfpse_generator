@@ -10,27 +10,26 @@ class PmfNfpseGenerator
 
   attr_accessor :config
   attr_accessor :cities
-  attr_accessor :zipcode, :state, :city, :cst, :billing_date, :email, :price_product, :price_others, :price_consultancy, :price_courses, :price_events, :extra_info, :cpf_cnpj, :name, :address
+  attr_accessor :cpf_cnpj, :name, :address, :zipcode, :state, :city, :email, :cfps, :billing_date, :items, :extra_info
 
-  validates_presence_of :zipcode, :state, :city, :cst, :billing_date, :email, :price_product, :price_others, :price_consultancy, :price_courses, :price_events, :extra_info, :cpf_cnpj, :name, :address
+  validates_presence_of :cpf_cnpj, :name, :address, :zipcode, :state, :city, :email, :billing_date, :items
 
   def initialize(attrs = {})
-    self.zipcode = attrs[:zipcode]
-    self.state = attrs[:state]
-    self.city = attrs[:city]
-    self.cst = (attrs[:cst].nil? || attrs[:cst].empty?) ? "0" : attrs[:cst]
-    self.billing_date = attrs[:billing_date]
-    self.email = attrs[:email]
-
-    self.price_product = attrs[:price_product]
-    self.price_others = attrs[:price_others]
-    self.price_consultancy = attrs[:price_consultancy]
-    self.price_courses = attrs[:price_courses]
-    self.price_events = attrs[:price_events]
-    self.extra_info = attrs[:extra_info]
+    # {:cpf_cnpj=>"13.372.575/0001-87", :name=>"SOCIALBASE SOLUCOES EM TECNOLOGIA LTDA", :address=>"Rod SC 401", :city=>"Florianópolis", :zipcode=>"88030-000", :state=>"SC", :email=>"pedro.bachiega-22@resultadosdigitais.com.br", :cfps=>nil, :items=>[{:price=>919, :cnae_id=>"9178", :cnae_code=>"6203100", :cnae_desc=>"SERVIÇO DE LICENCIAMENTO DE PROGRAMA DE MARKETING DIGITAL - RD STATION", :cnae_aliquota=>0.02, :cst=>"0"}, {:price=>750, :cnae_id=>"9177", :cnae_code=>"6204000", :cnae_desc=>"CONSULTORIA EM TECNOLOGIA DA INFORMAÇÃO E MARKETING DIGITAL - RD STATION", :cnae_aliquota=>0.02, :cst=>"0"}], :extra_info=>nil}
     self.cpf_cnpj = attrs[:cpf_cnpj]
     self.name = attrs[:name]
     self.address = attrs[:address]
+    self.zipcode = attrs[:zipcode]
+    self.state = attrs[:state]
+    self.city = attrs[:city]
+    self.email = attrs[:email]
+    self.cfps = attrs[:cfps]
+
+    self.billing_date = attrs[:billing_date]
+
+    self.items = attrs[:items]
+
+    self.extra_info = attrs[:extra_info]
   end
 
   def configure
@@ -67,6 +66,7 @@ class PmfNfpseGenerator
       end
       root.DataEmissao "#{date}Z"
 
+      # root.CFPS "#{cfps}"
       if city_info["city"] == "#{config.Emissor_Cidade}"
         root.CFPS "9201"
       elsif city_info["state"] == "#{config.Emissor_Estado}"
@@ -77,84 +77,20 @@ class PmfNfpseGenerator
 
       root.DadosServico do |servicos|
 
-        issqn = 0
         total = 0
+        issqn = 0
 
-        if !(price_product.nil? || price_product.empty?) && price_product.gsub("R$", "").to_i != 0
-          price = price_product.gsub("R$", "").gsub(" ", "").gsub(",", ".").to_f
-          aliquota = 0.02
+        items.each do |_item|
+          # {:price=>919, :cnae_id=>"9178", :cnae_code=>"6203100", :cnae_desc=>"SERVIÇO DE LICENCIAMENTO DE PROGRAMA DE MARKETING DIGITAL - RD STATION", :cnae_aliquota=>0.02, :cst=>"0"}
+          price = _item[:price].gsub("R$", "").gsub(" ", "").gsub(",", ".").to_f
+          aliquota = _item[:cnae_aliquota]
           issqn += (price * aliquota).round(2)
           total += price
           servicos.ItemServico do |item|
-            item.IdCNAE "9178"
-            item.CodigoAtividade "6203100"
-            item.DescricaoServico "SERVIÇO DE DESENVOLVIMENTO E LICENCIAMENTO DE PROGRAMA DE MARKETING DIGITAL - RD STATION"
-            item.CST cst
-            item.Aliquota aliquota
-            item.ValorUnitario price
-            item.Quantidade "1"
-            item.ValorTotal price
-          end
-        end
-        if !(price_others.nil? || price_others.empty?) && price_others.gsub("R$", "").to_i != 0
-          price = price_others.gsub("R$", "").gsub(" ", "").gsub(",", ".").to_f
-          aliquota = 0.02
-          issqn += (price * aliquota).round(2)
-          total += price
-          servicos.ItemServico do |item|
-            item.IdCNAE "9179"
-            item.CodigoAtividade "6201500"
-            item.DescricaoServico "SERVIÇO DE DESENVOLVIMENTO E SUPORTE DE MARKETING DIGITAL"
-            item.CST cst
-            item.Aliquota aliquota
-            item.ValorUnitario price
-            item.Quantidade "1"
-            item.ValorTotal price
-          end
-        end
-
-        if !(price_consultancy.nil? || price_consultancy.empty?) && price_consultancy.gsub("R$", "").to_i != 0
-          price = price_consultancy.gsub("R$", "").gsub(" ", "").gsub(",", ".").to_f
-          aliquota = 0.02
-          issqn += (price * aliquota).round(2)
-          total += price
-          servicos.ItemServico do |item|
-            item.IdCNAE "9177"
-            item.CodigoAtividade "6204000"
-            item.DescricaoServico "CONSULTORIA EM TECNOLOGIA DA INFORMAÇÃO E MARKETING DIGITAL - RD STATION"
-            item.CST cst
-            item.Aliquota aliquota
-            item.ValorUnitario price
-            item.Quantidade "1"
-            item.ValorTotal price
-          end
-        end
-        if !(price_courses.nil? || price_courses.empty?) && price_courses.gsub("R$", "").to_i != 0
-          price = price_courses.gsub("R$", "").gsub(" ", "").gsub(",", ".").to_f
-          aliquota = 0.02
-          issqn += (price * aliquota).round(2)
-          total += price
-          servicos.ItemServico do |item|
-            item.IdCNAE "9177"
-            item.CodigoAtividade "6204000"
-            item.DescricaoServico "MARKETING DIGITAL"
-            item.CST cst
-            item.Aliquota aliquota
-            item.ValorUnitario price
-            item.Quantidade "1"
-            item.ValorTotal price
-          end
-        end
-        if !(price_events.nil? || price_events.empty?) && price_events.gsub("R$", "").to_i != 0
-          price = price_events.gsub("R$", "").gsub(" ", "").gsub(",", ".").to_f
-          aliquota = 0.02
-          issqn += (price * aliquota).round(2)
-          total += price
-          servicos.ItemServico do |item|
-            item.IdCNAE "9177"
-            item.CodigoAtividade "6204000"
-            item.DescricaoServico "MARKETING DIGITAL"
-            item.CST cst
+            item.IdCNAE _item[:cnae_id]
+            item.CodigoAtividade _item[:cnae_code]
+            item.DescricaoServico _item[:cnae_desc]
+            item.CST _item[:cst]
             item.Aliquota aliquota
             item.ValorUnitario price
             item.Quantidade "1"
@@ -166,17 +102,17 @@ class PmfNfpseGenerator
         servicos.ValorISSQN issqn.round(2)
         servicos.ValorTotalServicos total.round(2)
 
-        extra_info = extra_info
+        _extra_info = extra_info
         # CSRF (4,65%)
         if total > 5000
           csrf = (total*0.0465).round(2).to_s.gsub(".", ",")
-          extra_info = "#{extra_info}
+          _extra_info = "#{_extra_info}
 CSRF (4,65%): R$ #{csrf}"
         end
         # IRRF (1,5%)
         if total > 666.66
           ir = (total*0.015).round(2).to_s.gsub(".", ",")
-          extra_info = "#{extra_info}
+          _extra_info = "#{_extra_info}
 IRRF (1,5%): R$ #{ir}"
         end
 
@@ -185,11 +121,11 @@ IRRF (1,5%): R$ #{ir}"
         taxesS = (total*taxesV).round(2).to_s.gsub(".", ",")
         taxesV = (taxesV*100).round(2).to_s.gsub(".", ",")
 
-        extra_info = "#{extra_info}
+        _extra_info = "#{_extra_info}
 
 Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{taxesS} (#{taxesV}%)"
 
-        servicos.DadosAdicionais extra_info
+        servicos.DadosAdicionais _extra_info
       end
       root.Tomador do |tomador|
         tomador.IdentificacaoTomador do |identificacao|
@@ -236,7 +172,6 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
   end
 
   def get_city_info(cep, state = "", cityname = "")
-
     state.strip!
     cityname.strip!
     cityname = (cityname.downcase == "brasilia") ? "brasília" : cityname
