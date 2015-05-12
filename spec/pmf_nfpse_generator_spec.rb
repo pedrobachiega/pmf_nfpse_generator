@@ -2,6 +2,7 @@ require 'spec_helper'
 
 describe PmfNfpseGenerator do
 
+  let(:items) { [{:price=>919, :cnae_id=>"9178", :cnae_code=>"6203100", :cnae_desc=>"SERVIÇO DE LICENCIAMENTO DE PROGRAMA DE MARKETING DIGITAL - RD STATION", :cnae_aliquota=>0.02, :cst=>"0"}] }
   let(:attrs) do
      {
        billing_date: Time.parse("2015-01-01"),
@@ -13,13 +14,9 @@ describe PmfNfpseGenerator do
        state: "sc",
        email: "email",
        cfps: "cfps",
-       price_product: "price_product",
-       price_consultancy: "price_consultancy",
-       price_others: "price_others",
-       price_courses: "price_courses",
-       price_events: "price_events",
        cst: "cst",
-       extra_info: "extra_info"
+       extra_info: "extra_info",
+       items: items
      }
   end
   let(:lib) { PmfNfpseGenerator.new(attrs) }
@@ -70,57 +67,22 @@ describe PmfNfpseGenerator do
          expect(invalid_lib.errors[:city].size).to eq(1)
        end
 
-       it "cst city" do
-         expect(invalid_lib.to_xml!).to be_falsey
-         expect(invalid_lib.errors[:city].size).to eq(1)
-       end
-
-       it "cst billing_date" do
+       it "without billing_date" do
          expect(invalid_lib.to_xml!).to be_falsey
          expect(invalid_lib.errors[:billing_date].size).to eq(1)
        end
 
-       it "cst email" do
+       it "without email" do
          expect(invalid_lib.to_xml!).to be_falsey
          expect(invalid_lib.errors[:email].size).to eq(1)
        end
 
-       it "cst price_product" do
-         expect(invalid_lib.to_xml!).to be_falsey
-         expect(invalid_lib.errors[:price_product].size).to eq(1)
-       end
-
-       it "cst price_others" do
-         expect(invalid_lib.to_xml!).to be_falsey
-         expect(invalid_lib.errors[:price_others].size).to eq(1)
-       end
-
-       it "cst price_consultancy" do
-         expect(invalid_lib.to_xml!).to be_falsey
-         expect(invalid_lib.errors[:price_consultancy].size).to eq(1)
-       end
-
-       it "cst price_courses" do
-         expect(invalid_lib.to_xml!).to be_falsey
-         expect(invalid_lib.errors[:price_courses].size).to eq(1)
-       end
-
-       it "cst price_events" do
-         expect(invalid_lib.to_xml!).to be_falsey
-         expect(invalid_lib.errors[:price_events].size).to eq(1)
-       end
-
-       it "cst extra_info" do
-         expect(invalid_lib.to_xml!).to be_falsey
-         expect(invalid_lib.errors[:extra_info].size).to eq(1)
-       end
-
-       it "cst name" do
+       it "without name" do
          expect(invalid_lib.to_xml!).to be_falsey
          expect(invalid_lib.errors[:name].size).to eq(1)
        end
 
-       it "cst address" do
+       it "without address" do
          expect(invalid_lib.to_xml!).to be_falsey
          expect(invalid_lib.errors[:address].size).to eq(1)
        end
