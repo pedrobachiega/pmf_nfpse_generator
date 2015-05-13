@@ -17,6 +17,7 @@ Gem::Specification.new do |s|
   # s.add_runtime_dependency "csv"
   s.add_runtime_dependency "builder"
   s.add_runtime_dependency "httparty"
+  s.add_runtime_dependency "i18n"
 
   s.add_development_dependency "bundler", "~> 1.9"
   s.add_development_dependency "rake", "~> 10.4"

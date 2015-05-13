@@ -4,6 +4,7 @@ PATH
     pmf_nfpse_generator (0.0.2)
       builder
       httparty
+      i18n
 
 GEM
   remote: https://rubygems.org/
@@ -16,6 +17,7 @@ GEM
     httparty (0.13.3)
       json (~> 1.8)
       multi_xml (>= 0.5.2)
+    i18n (0.7.0)
     json (1.8.2)
     multi_xml (0.5.5)
     rake (10.4.2)
