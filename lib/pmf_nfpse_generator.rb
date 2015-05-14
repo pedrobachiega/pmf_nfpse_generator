@@ -44,7 +44,8 @@ class PmfNfpseGenerator
     attr_accessor :TipoSistema, :Emissor_Identificacao, :Emissor_AEDF, :Emissor_TipoAedf, :Emissor_Cidade, :Emissor_Estado, :Impostos
 
     I18n.load_path = Dir['./config/locales/*.yml']
-    I18n.locale = 'pt-BR'
+    I18n.locale = :pt
+    I18n.default_locale = :pt
   end
 
   # {"city"=>"Curitiba", "state"=>"PR", "city_ibge_code"=>"4106902", "source"=>"csv"}
