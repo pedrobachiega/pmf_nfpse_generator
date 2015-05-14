@@ -217,7 +217,7 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
     now = DateTime.strptime("#{DateTime.now.day}/#{DateTime.now.month}/#{DateTime.now.year}", '%d/%m/%Y')
     date = DateTime.strptime(billing_date, '%d/%m/%Y')
     if date != now && date > now
-      errors.add(:billing_date, I18n.t "billing_date.cannot_be_in_the_future"  )
+      errors.add(:billing_date, I18n.t("billing_date.cannot_be_in_the_future"))
     end
   end
 
