@@ -176,7 +176,8 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
     cityname = (cityname.downcase == "brasilia") ? "brasília" : cityname
     cityname = (cityname.downcase == "sao paulo") ? "são paulo" : cityname
 
-    city_info = get_cities[state.downcase][cityname.downcase]
+    city_info = nil
+    city_info = get_cities[state.downcase][cityname.downcase] if get_cities[state.downcase]
     if city_info
       { "city" => city_info["Nome_Município"], "state" => city_info["UF"], "city_ibge_code" => city_info["UF_MUNIC"], "source" => "csv" }
     else
