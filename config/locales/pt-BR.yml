@@ -1,4 +1,6 @@
 pt-BR:
+  billing_date:
+    cannot_be_in_the_future: "A Data de emissão, não pode ser uma data futura."
   activemodel:
     errors:
       models:
