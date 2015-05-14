@@ -34,7 +34,7 @@ class PmfNfpseGenerator
 
     self.extra_info = attrs[:extra_info]
 
-    I18n.load_path = Dir['./config/locales/*.yml']
+    I18n.load_path = Dir['./../config/locales/*.yml']
     I18n.locale = 'pt-BR'
     I18n.default_locale = 'pt-BR'
   end
