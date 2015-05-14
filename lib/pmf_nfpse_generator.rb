@@ -43,8 +43,8 @@ class PmfNfpseGenerator
   class Configuration
     attr_accessor :TipoSistema, :Emissor_Identificacao, :Emissor_AEDF, :Emissor_TipoAedf, :Emissor_Cidade, :Emissor_Estado, :Impostos
 
-    I18n.locale = 'pt-BR'
     I18n.load_path = Dir['./config/locales/*.yml']
+    I18n.locale = 'pt-BR'
   end
 
   # {"city"=>"Curitiba", "state"=>"PR", "city_ibge_code"=>"4106902", "source"=>"csv"}
@@ -212,16 +212,18 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
   end
 
   def billing_date_cannot_be_in_the_future
+    return unless billing_date.present?
     now = DateTime.strptime("#{DateTime.now.day}/#{DateTime.now.month}/#{DateTime.now.year}", '%d/%m/%Y')
-    if billing_date.present? && billing_date != now && billing_date > now
+    date = DateTime.strptime(billing_date, '%d/%m/%Y')
+    if date != now && date > now
       errors.add(:billing_date, "A Data de emissão, não pode ser uma data futura.")
     end
   end
 
   def cpf_cnpj_format
-    formated_cpf_cnpj = format_cpf_cnpj
-    unless formated_cpf_cnpj.size == 14 && formated_cpf_cnpj.size == 11
-      errors.add(:cpf_cnpj, "Wrong CPF/CNPJ '#{formated_cpf_cnpj}'")
+    return unless cpf_cnpj.present?
+    unless format_cpf_cnpj.size == 14 || format_cpf_cnpj.size == 11
+      errors.add(:cpf_cnpj, "Wrong CPF/CNPJ '#{cpf_cnpj}'")
     end
   end
 

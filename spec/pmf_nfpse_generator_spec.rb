@@ -1,4 +1,5 @@
 require 'spec_helper'
+require 'active_support/all'
 
 describe PmfNfpseGenerator do
 
@@ -85,6 +86,18 @@ describe PmfNfpseGenerator do
        it "without address" do
          expect(invalid_lib.to_xml!).to be_falsey
          expect(invalid_lib.errors[:address].size).to eq(1)
+       end
+
+       it "invalid cpf_cnpj" do
+         lib.cpf_cnpj = "000"
+         expect(lib.to_xml!).to be_falsey
+         expect(lib.errors[:cpf_cnpj].size).to eq(1)
+       end
+
+       it "invalid cpf_cnpj" do
+         lib.billing_date = "#{1.day.from_now.day}/#{1.day.from_now.month}/#{1.day.from_now.year}"
+         expect(lib.to_xml!).to be_falsey
+         expect(lib.errors[:billing_date].size).to eq(1)
        end
 
      end
