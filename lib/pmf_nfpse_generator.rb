@@ -4,6 +4,7 @@ require 'csv'
 require 'builder'
 require 'httparty'
 require 'active_model'
+require 'i18n'
 
 class PmfNfpseGenerator
   include ActiveModel::Validations
@@ -13,6 +14,8 @@ class PmfNfpseGenerator
   attr_accessor :cpf_cnpj, :name, :address, :zipcode, :state, :city, :email, :cfps, :billing_date, :items, :extra_info
 
   validates_presence_of :cpf_cnpj, :name, :address, :zipcode, :state, :city, :email, :billing_date, :items
+  validate :billing_date_cannot_be_in_the_future
+  validate :cpf_cnpj_format
 
   def initialize(attrs = {})
     # {:cpf_cnpj=>"13.372.575/0001-87", :name=>"SOCIALBASE SOLUCOES EM TECNOLOGIA LTDA", :address=>"Rod SC 401", :city=>"Florianópolis", :zipcode=>"88030-000", :state=>"SC", :email=>"pedro.bachiega-22@resultadosdigitais.com.br", :cfps=>nil, :items=>[{:price=>919, :cnae_id=>"9178", :cnae_code=>"6203100", :cnae_desc=>"SERVIÇO DE LICENCIAMENTO DE PROGRAMA DE MARKETING DIGITAL - RD STATION", :cnae_aliquota=>0.02, :cst=>"0"}, {:price=>750, :cnae_id=>"9177", :cnae_code=>"6204000", :cnae_desc=>"CONSULTORIA EM TECNOLOGIA DA INFORMAÇÃO E MARKETING DIGITAL - RD STATION", :cnae_aliquota=>0.02, :cst=>"0"}], :extra_info=>nil}
@@ -39,6 +42,9 @@ class PmfNfpseGenerator
 
   class Configuration
     attr_accessor :TipoSistema, :Emissor_Identificacao, :Emissor_AEDF, :Emissor_TipoAedf, :Emissor_Cidade, :Emissor_Estado, :Impostos
+
+    I18n.locale = 'pt-BR'
+    I18n.load_path = Dir['./config/locales/*.yml']
   end
 
   # {"city"=>"Curitiba", "state"=>"PR", "city_ibge_code"=>"4106902", "source"=>"csv"}
@@ -47,8 +53,6 @@ class PmfNfpseGenerator
 
     city_info = get_city_info(zipcode.gsub(".",""), state, city)
     date = DateTime.strptime(billing_date, '%d/%m/%Y')
-    now = DateTime.strptime("#{DateTime.now.day}/#{DateTime.now.month}/#{DateTime.now.year}", '%d/%m/%Y')
-    raise "A Data de emissão, não pode ser uma data futura." if date != now && date > now
     date = date.strftime('%Y-%m-%d')
 
     xml = Builder::XmlMarkup.new( :indent => 2 )
@@ -135,8 +139,6 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
                 cpfcnpj.CNPJ formated_cpf_cnpj
               elsif (formated_cpf_cnpj.size == 11)
                 cpfcnpj.CPF formated_cpf_cnpj
-              else
-                raise "Wrong CPF/CNPJ '#{formated_cpf_cnpj}'"
               end
             end
           end # doc
@@ -207,6 +209,20 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
 
   def filepath(filename)
     File.join(File.dirname(File.expand_path(__FILE__)), filename)
+  end
+
+  def billing_date_cannot_be_in_the_future
+    now = DateTime.strptime("#{DateTime.now.day}/#{DateTime.now.month}/#{DateTime.now.year}", '%d/%m/%Y')
+    if billing_date.present? && billing_date != now && billing_date > now
+      errors.add(:billing_date, "A Data de emissão, não pode ser uma data futura.")
+    end
+  end
+
+  def cpf_cnpj_format
+    formated_cpf_cnpj = format_cpf_cnpj
+    unless formated_cpf_cnpj.size == 14 && formated_cpf_cnpj.size == 11
+      errors.add(:cpf_cnpj, "Wrong CPF/CNPJ '#{formated_cpf_cnpj}'")
+    end
   end
 
 end
