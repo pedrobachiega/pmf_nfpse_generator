@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name          = 'pmf_nfpse_generator'
-  s.version       = '0.0.2'
+  s.version       = '0.0.3'
   s.date          = '2014-04-06'
   s.summary       = "PMF (SC) NFPS-e Generator"
   s.description   = "A gem to generate NFPS-e XML's of Florianópolis, SC, Brazil"
