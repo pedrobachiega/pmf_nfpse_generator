@@ -184,7 +184,7 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
     cep.strip!
     cep = cep.gsub(".", "").gsub("/", "").gsub("-", "").gsub(" ", "")
     response = HTTParty.get("http://api.postmon.com.br/v1/cep/#{cep}")
-    raise "Wrong Zipcode." unless response.code == 200
+    raise I18n.t("zipcode.invalid") unless response.code == 200
     resp = response.parsed_response
     { "city" => resp["cidade"], "state" => resp["estado"], "city_ibge_code" => resp["cidade_info"]["codigo_ibge"], "source" => "postmon" }
   end
