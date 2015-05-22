@@ -179,14 +179,14 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
     city_info = nil
     city_info = get_cities[state.downcase][cityname.downcase] if get_cities[state.downcase]
     if city_info
-      { "city" => city_info["Nome_Município"], "state" => city_info["UF"], "city_ibge_code" => city_info["UF_MUNIC"], "source" => "csv" }
-    else
-      cep.strip!
-      cep = cep.gsub(".", "").gsub("/", "").gsub("-", "").gsub(" ", "")
-      response = HTTParty.get("http://api.postmon.com.br/v1/cep/#{cep}")
-      resp = response.parsed_response
-      { "city" => resp["cidade"], "state" => resp["estado"], "city_ibge_code" => resp["cidade_info"]["codigo_ibge"], "source" => "postmon" }
+      return { "city" => city_info["Nome_Município"], "state" => city_info["UF"], "city_ibge_code" => city_info["UF_MUNIC"], "source" => "csv" }
     end
+    cep.strip!
+    cep = cep.gsub(".", "").gsub("/", "").gsub("-", "").gsub(" ", "")
+    response = HTTParty.get("http://api.postmon.com.br/v1/cep/#{cep}")
+    raise "Wrong Zipcode." unless response.code == 200
+    resp = response.parsed_response
+    { "city" => resp["cidade"], "state" => resp["estado"], "city_ibge_code" => resp["cidade_info"]["codigo_ibge"], "source" => "postmon" }
   end
 
   def get_cities
