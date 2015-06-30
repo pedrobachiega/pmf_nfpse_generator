@@ -2,7 +2,7 @@
 
 Gem::Specification.new do |s|
   s.name          = 'pmf_nfpse_generator'
-  s.version       = '0.0.3'
+  s.version       = '0.0.4'
   s.date          = '2014-04-06'
   s.summary       = "PMF (SC) NFPS-e Generator"
   s.description   = "A gem to generate NFPS-e XML's of Florianópolis, SC, Brazil"
@@ -18,6 +18,7 @@ Gem::Specification.new do |s|
   s.add_runtime_dependency "builder"
   s.add_runtime_dependency "httparty"
   s.add_runtime_dependency "i18n"
+  s.add_runtime_dependency "activemodel"
 
   s.add_development_dependency "bundler", "~> 1.9"
   s.add_development_dependency "rake", "~> 10.4"

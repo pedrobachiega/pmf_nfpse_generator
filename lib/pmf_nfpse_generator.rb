@@ -11,7 +11,7 @@ class PmfNfpseGenerator
 
   attr_accessor :config
   attr_accessor :cities
-  attr_accessor :cpf_cnpj, :name, :address, :zipcode, :state, :city, :email, :cfps, :billing_date, :items, :extra_info
+  attr_accessor :cpf_cnpj, :name, :address, :zipcode, :state, :city, :email, :cfps, :billing_date, :items, :extra_info, :csrf, :irrf
 
   validates_presence_of :cpf_cnpj, :name, :address, :zipcode, :state, :city, :email, :billing_date, :items
   validate :billing_date_cannot_be_in_the_future
@@ -31,6 +31,9 @@ class PmfNfpseGenerator
     self.billing_date = attrs[:billing_date]
 
     self.items = attrs[:items]
+
+    self.csrf = attrs[:csrf]
+    self.irrf = attrs[:irrf]
 
     self.extra_info = attrs[:extra_info]
   end
@@ -105,16 +108,14 @@ class PmfNfpseGenerator
 
         _extra_info = extra_info
         # CSRF (4,65%)
-        if total > 5000
-          csrf = (total*0.0465).round(2).to_s.gsub(".", ",")
+        if csrf > 0
           _extra_info = "#{_extra_info}
 CSRF (4,65%): R$ #{csrf}"
         end
         # IRRF (1,5%)
-        if total > 666.66
-          ir = (total*0.015).round(2).to_s.gsub(".", ",")
+        if irrf > 0
           _extra_info = "#{_extra_info}
-IRRF (1,5%): R$ #{ir}"
+IRRF (1,5%): R$ #{irrf}"
         end
 
         # config.Impostos = { :pis => 0.0065; :cofins => 0.03; :iss => 0.02; :cprb => 0.02 }
