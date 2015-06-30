@@ -110,12 +110,12 @@ class PmfNfpseGenerator
         # CSRF (4,65%)
         if csrf > 0
           _extra_info = "#{_extra_info}
-CSRF (4,65%): R$ #{csrf}"
+CSRF (4,65%): R$ #{csrf.round(2).to_s.gsub(".", ",")}"
         end
         # IRRF (1,5%)
         if irrf > 0
           _extra_info = "#{_extra_info}
-IRRF (1,5%): R$ #{irrf}"
+IRRF (1,5%): R$ #{irrf.round(2).to_s.gsub(".", ",")}"
         end
 
         # config.Impostos = { :pis => 0.0065; :cofins => 0.03; :iss => 0.02; :cprb => 0.02 }
