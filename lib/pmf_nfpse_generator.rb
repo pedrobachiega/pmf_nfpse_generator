@@ -95,10 +95,10 @@ class PmfNfpseGenerator
             item.CodigoAtividade _item[:cnae_code]
             item.DescricaoServico _item[:cnae_desc]
             item.CST _item[:cst]
-            item.Aliquota aliquota
-            item.ValorUnitario price
+            item.Aliquota aliquota.round(2)
+            item.ValorUnitario price.round(2)
             item.Quantidade "1"
-            item.ValorTotal price
+            item.ValorTotal price.round(2)
           end
         end
 
