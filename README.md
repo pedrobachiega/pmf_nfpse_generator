@@ -2,7 +2,7 @@
 
 [pt_BR] Gema para gerar XML's da [NFPS-e de Florianópolis, SC](http://www.pmf.sc.gov.br/sites/notaeletronica/) - Brasil
 
-[en] A gem to generate NFPS-e XML's of Florianópolis, SC - Brazil
+[en] A gem to generate [NFPS-e XML's of Florianópolis, SC](http://www.pmf.sc.gov.br/sites/notaeletronica/) - Brazil
 
 ## Uso
 
