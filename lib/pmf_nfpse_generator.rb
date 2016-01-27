@@ -45,7 +45,8 @@ class PmfNfpseGenerator
 
   class Configuration
     attr_accessor :TipoSistema, :Emissor_Identificacao, :Emissor_AEDF, :Emissor_TipoAedf, :Emissor_Cidade, :Emissor_Estado, :Impostos
-    I18n.load_path = Dir['./config/locales/*.yml']
+    I18n.config.enforce_available_locales = false
+    I18n.load_path = Dir['../config/locales/*.yml']
     I18n.locale = 'pt-BR'
     I18n.default_locale = 'pt-BR'
   end
@@ -187,6 +188,7 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
     response = HTTParty.get("http://api.postmon.com.br/v1/cep/#{cep}")
     raise I18n.t("zipcode.invalid") unless response.code == 200
     resp = response.parsed_response
+    raise I18n.t("zipcode.invalid") if resp["cidade_info"].nil?
     { "city" => resp["cidade"], "state" => resp["estado"], "city_ibge_code" => resp["cidade_info"]["codigo_ibge"], "source" => "postmon" }
   end
 

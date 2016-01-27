@@ -17,6 +17,8 @@ describe PmfNfpseGenerator do
        cfps: "cfps",
        cst: "cst",
        extra_info: "extra_info",
+       csrf: 1,
+       irrf: 1,
        items: items
      }
   end
@@ -41,6 +43,15 @@ describe PmfNfpseGenerator do
      it "generate a xml" do
        VCR.use_cassette('to_xml') do
          expect(lib.to_xml!).to be
+       end
+     end
+
+     describe "raise" do
+
+       it "zipcode.invalid" do
+         VCR.use_cassette('to_xml_with_invalid_cep') do
+           expect{lib.to_xml!}.to raise_error(RuntimeError, I18n.t("zipcode.invalid"))
+         end
        end
      end
 

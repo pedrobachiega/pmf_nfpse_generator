@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    pmf_nfpse_generator (0.0.3)
+    pmf_nfpse_generator (0.0.4)
       activemodel
       builder
       httparty
@@ -10,26 +10,26 @@ PATH
 GEM
   remote: https://rubygems.org/
   specs:
-    activemodel (4.1.5)
-      activesupport (= 4.1.5)
+    activemodel (4.2.5.1)
+      activesupport (= 4.2.5.1)
       builder (~> 3.1)
-    activesupport (4.1.5)
-      i18n (~> 0.6, >= 0.6.9)
+    activesupport (4.2.5.1)
+      i18n (~> 0.7)
       json (~> 1.7, >= 1.7.7)
       minitest (~> 5.1)
-      thread_safe (~> 0.1)
+      thread_safe (~> 0.3, >= 0.3.4)
       tzinfo (~> 1.1)
     addressable (2.3.6)
     builder (3.2.2)
     crack (0.4.2)
       safe_yaml (~> 1.0.0)
     diff-lcs (1.2.5)
-    httparty (0.13.5)
+    httparty (0.13.7)
       json (~> 1.8)
       multi_xml (>= 0.5.2)
     i18n (0.7.0)
     json (1.8.3)
-    minitest (5.7.0)
+    minitest (5.8.4)
     multi_xml (0.5.5)
     rake (10.4.2)
     rspec (3.2.0)
@@ -64,3 +64,6 @@ DEPENDENCIES
   rspec
   vcr
   webmock
+
+BUNDLED WITH
+   1.10.6
