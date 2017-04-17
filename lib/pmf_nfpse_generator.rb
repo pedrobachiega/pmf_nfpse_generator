@@ -56,8 +56,7 @@ class PmfNfpseGenerator
     return nil unless self.valid?
 
     city_info = get_city_info(zipcode.gsub(".",""), state, city)
-    date = DateTime.strptime(billing_date, '%d/%m/%Y')
-    date = date.strftime('%Y-%m-%d')
+    date = billing_date.try(:to_datetime).try(:strftime, '%Y-%m-%d')
 
     xml = Builder::XmlMarkup.new( :indent => 2 )
     xml.instruct! :xml, :encoding => "UTF-8"
@@ -217,9 +216,9 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
 
   def billing_date_cannot_be_in_the_future
     return unless billing_date.present?
-    now = DateTime.strptime("#{DateTime.now.day}/#{DateTime.now.month}/#{DateTime.now.year}", '%d/%m/%Y')
-    date = DateTime.strptime(billing_date, '%d/%m/%Y')
-    if date != now && date > now
+    date_current = Date.current
+    date = billing_date.try(:to_date)
+    if date != date_current && date > date_current
       errors.add(:billing_date, I18n.t("billing_date.cannot_be_in_the_future"))
     end
   end
