@@ -1,0 +1,26 @@
+en:
+  billing_date:
+    cannot_be_in_the_future: "A Data de emissão, não pode ser uma data futura."
+  activemodel:
+    errors:
+      models:
+        pmf_nfpse_generator:
+          attributes:
+            items:
+              blank: "cobrança não possui itens."
+            cpf_cnpj:
+              blank: "conta não possui cpf ou cnpj."
+            name:
+              blank: "conta não possui nome."
+            address:
+              blank: "conta não possui endereço."
+            zipcode:
+              blank: "conta não possui cep."
+            state:
+              blank: "conta não possui estado."
+            city:
+              blank: "conta não possui cidade."
+            email:
+              blank: "conta não possui email."
+            billing_date:
+              blank: "A Data de emissão não informada."
