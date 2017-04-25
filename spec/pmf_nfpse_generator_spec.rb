@@ -46,15 +46,6 @@ describe PmfNfpseGenerator do
        end
      end
 
-     describe "raise" do
-
-       it "zipcode.invalid" do
-         VCR.use_cassette('to_xml_with_invalid_cep') do
-           expect{lib.to_xml!}.to raise_error(RuntimeError, I18n.t("zipcode.invalid"))
-         end
-       end
-     end
-
      describe "validate" do
 
        let(:invalid_lib) { PmfNfpseGenerator.new }
@@ -101,13 +92,17 @@ describe PmfNfpseGenerator do
 
        it "invalid cpf_cnpj" do
          lib.cpf_cnpj = "000"
-         expect(lib.to_xml!).to be_falsey
+         VCR.use_cassette('to_xml_invalid_cpf_cnpj') do
+           expect(lib.to_xml!).to be_falsey
+         end
          expect(lib.errors[:cpf_cnpj].size).to eq(1)
        end
 
        it "invalid cpf_cnpj" do
          lib.billing_date = "#{1.day.from_now.day}/#{1.day.from_now.month}/#{1.day.from_now.year}"
-         expect(lib.to_xml!).to be_falsey
+         VCR.use_cassette('to_xml_invalid_cpf_cnpj') do
+           expect(lib.to_xml!).to be_falsey
+         end
          expect(lib.errors[:billing_date].size).to eq(1)
        end
 

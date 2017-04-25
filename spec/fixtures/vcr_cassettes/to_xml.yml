@@ -18,29 +18,92 @@ http_interactions:
       code: 200
       message: OK
     headers:
-      Server:
-      - nginx/1.1.19
       Date:
-      - Fri, 08 May 2015 19:56:16 GMT
+      - Tue, 25 Apr 2017 00:23:53 GMT
       Content-Type:
       - application/json
-      Content-Length:
-      - '309'
+      Transfer-Encoding:
+      - chunked
       Connection:
       - keep-alive
+      Set-Cookie:
+      - __cfduid=d038a7411216dfce68456f6baa5b278771493079833; expires=Wed, 25-Apr-18
+        00:23:53 GMT; path=/; domain=.postmon.com.br; HttpOnly
+      Vary:
+      - Accept-Encoding
       Access-Control-Allow-Origin:
       - "*"
       Cache-Control:
       - public, max-age=2592000
-      X-Cache:
+      X-Cache-Status:
       - MISS
+      Cf-Cache-Status:
+      - HIT
+      Expires:
+      - Thu, 25 May 2017 00:23:53 GMT
+      Server:
+      - cloudflare-nginx
+      Cf-Ray:
+      - 354d27fd644f4acd-GRU
     body:
-      encoding: UTF-8
+      encoding: ASCII-8BIT
       string: '{"bairro": "Lagoa da Concei\u00e7\u00e3o", "cidade": "Florian\u00f3polis",
-        "cep": "88062365", "logradouro": "Servid\u00e3o Valad\u00e3o", "estado_info":
-        {"area_km2": "95.736,165", "codigo_ibge": "42", "nome": "Santa Catarina"},
-        "cidade_info": {"area_km2": "675,409", "codigo_ibge": "4205407"}, "estado":
-        "SC"}'
+        "logradouro": "Servid\u00e3o Valad\u00e3o", "estado_info": {"area_km2": "95.737,895",
+        "codigo_ibge": "42", "nome": "Santa Catarina"}, "cep": "88062365", "cidade_info":
+        {"area_km2": "675,409", "codigo_ibge": "4205407"}, "estado": "SC"}'
     http_version: 
-  recorded_at: Fri, 08 May 2015 19:47:59 GMT
+  recorded_at: Tue, 25 Apr 2017 00:23:53 GMT
+- request:
+    method: get
+    uri: http://api.postmon.com.br/v1/cep/88062365
+    body:
+      encoding: US-ASCII
+      string: ''
+    headers:
+      Accept-Encoding:
+      - gzip;q=1.0,deflate;q=0.6,identity;q=0.3
+      Accept:
+      - "*/*"
+      User-Agent:
+      - Ruby
+  response:
+    status:
+      code: 200
+      message: OK
+    headers:
+      Date:
+      - Tue, 25 Apr 2017 00:23:53 GMT
+      Content-Type:
+      - application/json
+      Transfer-Encoding:
+      - chunked
+      Connection:
+      - keep-alive
+      Set-Cookie:
+      - __cfduid=dbc476bcc3ad8ea732a7f24587b40b7641493079833; expires=Wed, 25-Apr-18
+        00:23:53 GMT; path=/; domain=.postmon.com.br; HttpOnly
+      Vary:
+      - Accept-Encoding
+      Access-Control-Allow-Origin:
+      - "*"
+      Cache-Control:
+      - public, max-age=2592000
+      X-Cache-Status:
+      - MISS
+      Cf-Cache-Status:
+      - HIT
+      Expires:
+      - Thu, 25 May 2017 00:23:53 GMT
+      Server:
+      - cloudflare-nginx
+      Cf-Ray:
+      - 354d27fe95574a5a-GRU
+    body:
+      encoding: ASCII-8BIT
+      string: '{"bairro": "Lagoa da Concei\u00e7\u00e3o", "cidade": "Florian\u00f3polis",
+        "logradouro": "Servid\u00e3o Valad\u00e3o", "estado_info": {"area_km2": "95.737,895",
+        "codigo_ibge": "42", "nome": "Santa Catarina"}, "cep": "88062365", "cidade_info":
+        {"area_km2": "675,409", "codigo_ibge": "4205407"}, "estado": "SC"}'
+    http_version: 
+  recorded_at: Tue, 25 Apr 2017 00:23:53 GMT
 recorded_with: VCR 2.9.2
