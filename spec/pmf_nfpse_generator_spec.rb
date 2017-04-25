@@ -24,7 +24,7 @@ describe PmfNfpseGenerator do
   end
   let(:lib) { PmfNfpseGenerator.new(attrs) }
 
-   describe "#to_xml!" do
+   describe "#to_xml" do
      before(:each) do
        lib.configure do |config|
          config.TipoSistema = "1"
@@ -42,16 +42,7 @@ describe PmfNfpseGenerator do
 
      it "generate a xml" do
        VCR.use_cassette('to_xml') do
-         expect(lib.to_xml!).to be
-       end
-     end
-
-     describe "raise" do
-
-       it "zipcode.invalid" do
-         VCR.use_cassette('to_xml_with_invalid_cep') do
-           expect{lib.to_xml!}.to raise_error(RuntimeError, I18n.t("zipcode.invalid"))
-         end
+         expect(lib.to_xml).to be
        end
      end
 
@@ -60,54 +51,58 @@ describe PmfNfpseGenerator do
        let(:invalid_lib) { PmfNfpseGenerator.new }
 
        it "without zipcode" do
-         expect(invalid_lib.to_xml!).to be_falsey
+         expect(invalid_lib.to_xml).to be_falsey
          expect(invalid_lib.errors[:zipcode].size).to eq(1)
        end
 
        it "without cpf_cnpj" do
-         expect(invalid_lib.to_xml!).to be_falsey
+         expect(invalid_lib.to_xml).to be_falsey
          expect(invalid_lib.errors[:cpf_cnpj].size).to eq(1)
        end
 
        it "without state" do
-         expect(invalid_lib.to_xml!).to be_falsey
+         expect(invalid_lib.to_xml).to be_falsey
          expect(invalid_lib.errors[:state].size).to eq(1)
        end
 
        it "without city" do
-         expect(invalid_lib.to_xml!).to be_falsey
+         expect(invalid_lib.to_xml).to be_falsey
          expect(invalid_lib.errors[:city].size).to eq(1)
        end
 
        it "without billing_date" do
-         expect(invalid_lib.to_xml!).to be_falsey
+         expect(invalid_lib.to_xml).to be_falsey
          expect(invalid_lib.errors[:billing_date].size).to eq(1)
        end
 
        it "without email" do
-         expect(invalid_lib.to_xml!).to be_falsey
+         expect(invalid_lib.to_xml).to be_falsey
          expect(invalid_lib.errors[:email].size).to eq(1)
        end
 
        it "without name" do
-         expect(invalid_lib.to_xml!).to be_falsey
+         expect(invalid_lib.to_xml).to be_falsey
          expect(invalid_lib.errors[:name].size).to eq(1)
        end
 
        it "without address" do
-         expect(invalid_lib.to_xml!).to be_falsey
+         expect(invalid_lib.to_xml).to be_falsey
          expect(invalid_lib.errors[:address].size).to eq(1)
        end
 
        it "invalid cpf_cnpj" do
          lib.cpf_cnpj = "000"
-         expect(lib.to_xml!).to be_falsey
+         VCR.use_cassette('to_xml_invalid_cpf_cnpj') do
+           expect(lib.to_xml).to be_falsey
+         end
          expect(lib.errors[:cpf_cnpj].size).to eq(1)
        end
 
        it "invalid cpf_cnpj" do
          lib.billing_date = "#{1.day.from_now.day}/#{1.day.from_now.month}/#{1.day.from_now.year}"
-         expect(lib.to_xml!).to be_falsey
+         VCR.use_cassette('to_xml_invalid_cpf_cnpj') do
+           expect(lib.to_xml).to be_falsey
+         end
          expect(lib.errors[:billing_date].size).to eq(1)
        end
 

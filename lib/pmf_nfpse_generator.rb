@@ -16,13 +16,14 @@ class PmfNfpseGenerator
   validates_presence_of :cpf_cnpj, :name, :address, :zipcode, :state, :city, :email, :billing_date, :items
   validate :billing_date_cannot_be_in_the_future
   validate :cpf_cnpj_format
+  validate :zipcode_in_postmon_api
 
   def initialize(attrs = {})
     # {:cpf_cnpj=>"13.372.575/0001-87", :name=>"SOCIALBASE SOLUCOES EM TECNOLOGIA LTDA", :address=>"Rod SC 401", :city=>"Florianópolis", :zipcode=>"88030-000", :state=>"SC", :email=>"pedro.bachiega-22@resultadosdigitais.com.br", :cfps=>nil, :items=>[{:price=>919, :cnae_id=>"9178", :cnae_code=>"6203100", :cnae_desc=>"SERVIÇO DE LICENCIAMENTO DE PROGRAMA DE MARKETING DIGITAL - RD STATION", :cnae_aliquota=>0.02, :cst=>"0"}, {:price=>750, :cnae_id=>"9177", :cnae_code=>"6204000", :cnae_desc=>"CONSULTORIA EM TECNOLOGIA DA INFORMAÇÃO E MARKETING DIGITAL - RD STATION", :cnae_aliquota=>0.02, :cst=>"0"}], :extra_info=>nil}
     self.cpf_cnpj = attrs[:cpf_cnpj]
     self.name = attrs[:name]
     self.address = attrs[:address]
-    self.zipcode = attrs[:zipcode]
+    self.zipcode = zipcode_strip(attrs[:zipcode])
     self.state = attrs[:state]
     self.city = attrs[:city]
     self.email = attrs[:email]
@@ -52,7 +53,7 @@ class PmfNfpseGenerator
   end
 
   # {"city"=>"Curitiba", "state"=>"PR", "city_ibge_code"=>"4106902", "source"=>"csv"}
-  def to_xml!
+  def to_xml
     return nil unless self.valid?
 
     city_info = get_city_info(zipcode.gsub(".",""), state, city)
@@ -182,12 +183,8 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
     if city_info
       return { "city" => city_info["Nome_Município"], "state" => city_info["UF"], "city_ibge_code" => city_info["UF_MUNIC"], "source" => "csv" }
     end
-    cep.strip!
-    cep = cep.gsub(".", "").gsub("/", "").gsub("-", "").gsub(" ", "")
     response = HTTParty.get("http://api.postmon.com.br/v1/cep/#{cep}")
-    raise I18n.t("zipcode.invalid") unless response.code == 200
     resp = response.parsed_response
-    raise I18n.t("zipcode.invalid") if resp["cidade_info"].nil?
     { "city" => resp["cidade"], "state" => resp["estado"], "city_ibge_code" => resp["cidade_info"]["codigo_ibge"], "source" => "postmon" }
   end
 
@@ -219,15 +216,32 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
     date_current = Date.current
     date = billing_date.try(:to_date)
     if date != date_current && date > date_current
-      errors.add(:billing_date, I18n.t("billing_date.cannot_be_in_the_future"))
+      errors.add(:billing_date, :not_be_future)
     end
   end
 
   def cpf_cnpj_format
     return unless cpf_cnpj.present?
     unless format_cpf_cnpj.size == 14 || format_cpf_cnpj.size == 11
-      errors.add(:cpf_cnpj, "Wrong CPF/CNPJ '#{cpf_cnpj}'")
+      errors.add(:cpf_cnpj, :invalid)
     end
   end
 
+  def zipcode_in_postmon_api
+    return unless zipcode.present?
+    return errors.add(:zipcode, :length) unless zipcode.size == 8
+    response = validate_zipcode_in_postmon_api(zipcode)
+    return errors.add(:zipcode, :invalid) unless response.code == 200
+    parsed_response = response.parsed_response
+    errors.add(:zipcode, :invalid) if parsed_response['cidade_info'].blank?
+  end
+
+  def zipcode_strip(zip)
+    return unless zip
+    zip.delete('.').delete('/').delete('-').delete(' ')
+  end
+
+  def validate_zipcode_in_postmon_api(cep)
+    HTTParty.get("http://api.postmon.com.br/v1/cep/#{cep}")
+  end
 end

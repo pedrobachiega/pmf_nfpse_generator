@@ -12,12 +12,15 @@ pt-BR:
               blank: "cobrança não possui itens."
             cpf_cnpj:
               blank: "conta não possui cpf ou cnpj."
+              invalid: "conta possui cpf ou cnpj inválido"
             name:
               blank: "conta não possui nome."
             address:
               blank: "conta não possui endereço."
             zipcode:
-              blank: "conta não possui cep."
+              blank: "conta não possui cep"
+              invalid: "conta com um cep inválido"
+              length: "conta com cep diferente de 8 dígitos"
             state:
               blank: "conta não possui estado."
             city:
@@ -26,3 +29,4 @@ pt-BR:
               blank: "conta não possui email."
             billing_date:
               blank: "A Data de emissão não informada."
+              not_be_future: "Data de emissão da NF não pode ser uma data futura"
