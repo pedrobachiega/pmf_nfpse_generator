@@ -37,7 +37,7 @@ class PmfNfpseGenerator
     self.irrf = attrs[:irrf]
 
     self.extra_info = attrs[:extra_info]
-    self.city_info = get_city_info(zipcode.try(:gsub, ".", ""), state, city) if valid?
+    self.city_info = get_city_info(zipcode.try(:gsub, ".", ""), state, city)
   end
 
   def configure
@@ -55,7 +55,7 @@ class PmfNfpseGenerator
 
   # {"city"=>"Curitiba", "state"=>"PR", "city_ibge_code"=>"4106902", "source"=>"csv"}
   def to_xml
-    return nil if !valid? || !city_info
+    return nil unless valid?
 
     date = billing_date.try(:to_datetime).try(:strftime, '%Y-%m-%d')
 
