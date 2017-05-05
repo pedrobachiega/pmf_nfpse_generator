@@ -10,9 +10,9 @@ describe PmfNfpseGenerator do
        cpf_cnpj: "00.000.000/0000-00",
        name: "name",
        address: "address",
-       city: "city",
+       city: "Florianópolis",
        zipcode: "88062365",
-       state: "sc",
+       state: "SC",
        email: "email",
        cfps: "cfps",
        cst: "cst",
@@ -47,66 +47,99 @@ describe PmfNfpseGenerator do
      end
 
      describe "validate" do
+       let(:invalid_lib) { PmfNfpseGenerator.new(invalid_attrs) }
 
-       let(:invalid_lib) { PmfNfpseGenerator.new }
+       context "without zipcode" do
+         let(:invalid_attrs) { attrs.merge(zipcode: nil) }
 
-       it "without zipcode" do
-         expect(invalid_lib.to_xml).to be_falsey
-         expect(invalid_lib.errors[:zipcode].size).to eq(1)
-       end
-
-       it "without cpf_cnpj" do
-         expect(invalid_lib.to_xml).to be_falsey
-         expect(invalid_lib.errors[:cpf_cnpj].size).to eq(1)
-       end
-
-       it "without state" do
-         expect(invalid_lib.to_xml).to be_falsey
-         expect(invalid_lib.errors[:state].size).to eq(1)
-       end
-
-       it "without city" do
-         expect(invalid_lib.to_xml).to be_falsey
-         expect(invalid_lib.errors[:city].size).to eq(1)
-       end
-
-       it "without billing_date" do
-         expect(invalid_lib.to_xml).to be_falsey
-         expect(invalid_lib.errors[:billing_date].size).to eq(1)
-       end
-
-       it "without email" do
-         expect(invalid_lib.to_xml).to be_falsey
-         expect(invalid_lib.errors[:email].size).to eq(1)
-       end
-
-       it "without name" do
-         expect(invalid_lib.to_xml).to be_falsey
-         expect(invalid_lib.errors[:name].size).to eq(1)
-       end
-
-       it "without address" do
-         expect(invalid_lib.to_xml).to be_falsey
-         expect(invalid_lib.errors[:address].size).to eq(1)
-       end
-
-       it "invalid cpf_cnpj" do
-         lib.cpf_cnpj = "000"
-         VCR.use_cassette('to_xml_invalid_cpf_cnpj') do
-           expect(lib.to_xml).to be_falsey
+         it do
+           expect(invalid_lib.to_xml).to be_falsey
+           expect(invalid_lib.errors[:zipcode].size).to eq(1)
          end
-         expect(lib.errors[:cpf_cnpj].size).to eq(1)
        end
 
-       it "invalid cpf_cnpj" do
-         lib.billing_date = "#{1.day.from_now.day}/#{1.day.from_now.month}/#{1.day.from_now.year}"
-         VCR.use_cassette('to_xml_invalid_cpf_cnpj') do
-           expect(lib.to_xml).to be_falsey
+       context "without cpf_cnpj" do
+         let(:invalid_attrs) { attrs.merge(cpf_cnpj: nil) }
+
+         it do
+           expect(invalid_lib.to_xml).to be_falsey
+           expect(invalid_lib.errors[:cpf_cnpj].size).to eq(1)
          end
-         expect(lib.errors[:billing_date].size).to eq(1)
        end
 
+       context "without state" do
+         let(:invalid_attrs) { attrs.merge(state: nil) }
+
+         it do
+           expect(invalid_lib.to_xml).to be_falsey
+           expect(invalid_lib.errors[:state].size).to eq(1)
+         end
+       end
+
+       context "without city" do
+         let(:invalid_attrs) { attrs.merge(city: nil) }
+
+         it do
+           expect(invalid_lib.to_xml).to be_falsey
+           expect(invalid_lib.errors[:city].size).to eq(1)
+         end
+       end
+
+       context "without billing_date" do
+         let(:invalid_attrs) { attrs.merge(billing_date: nil) }
+
+         it do
+           expect(invalid_lib.to_xml).to be_falsey
+           expect(invalid_lib.errors[:billing_date].size).to eq(1)
+         end
+       end
+
+       context "without email" do
+         let(:invalid_attrs) { attrs.merge(email: nil) }
+
+         it do
+           expect(invalid_lib.to_xml).to be_falsey
+           expect(invalid_lib.errors[:email].size).to eq(1)
+         end
+       end
+
+       context "without name" do
+         let(:invalid_attrs) { attrs.merge(name: nil) }
+
+         it do
+           expect(invalid_lib.to_xml).to be_falsey
+           expect(invalid_lib.errors[:name].size).to eq(1)
+         end
+       end
+
+       context "without address" do
+         let(:invalid_attrs) { attrs.merge(address: nil) }
+
+         it do
+           expect(invalid_lib.to_xml).to be_falsey
+           expect(invalid_lib.errors[:address].size).to eq(1)
+         end
+       end
+
+       context "invalid cpf_cnpj" do
+         it do
+           lib.cpf_cnpj = "000"
+           VCR.use_cassette('to_xml_invalid_cpf_cnpj') do
+             expect(lib.to_xml).to be_falsey
+           end
+           expect(lib.errors[:cpf_cnpj].size).to eq(1)
+         end
+       end
+
+       context "invalid cpf_cnpj" do
+         it do
+           lib.billing_date = "#{1.day.from_now.day}/#{1.day.from_now.month}/#{1.day.from_now.year}"
+           VCR.use_cassette('to_xml_invalid_cpf_cnpj') do
+             expect(lib.to_xml).to be_falsey
+           end
+           expect(lib.errors[:billing_date].size).to eq(1)
+         end
+       end
      end
    end
-
 end
