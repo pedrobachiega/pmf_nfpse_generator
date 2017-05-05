@@ -16,6 +16,7 @@ class PmfNfpseGenerator
   validates_presence_of :cpf_cnpj, :name, :address, :zipcode, :state, :city, :email, :billing_date, :items
   validate :billing_date_cannot_be_in_the_future
   validate :cpf_cnpj_format
+  validate :validate_city_info
 
   def initialize(attrs = {})
     # {:cpf_cnpj=>"13.372.575/0001-87", :name=>"SOCIALBASE SOLUCOES EM TECNOLOGIA LTDA", :address=>"Rod SC 401", :city=>"Florianópolis", :zipcode=>"88030-000", :state=>"SC", :email=>"pedro.bachiega-22@resultadosdigitais.com.br", :cfps=>nil, :items=>[{:price=>919, :cnae_id=>"9178", :cnae_code=>"6203100", :cnae_desc=>"SERVIÇO DE LICENCIAMENTO DE PROGRAMA DE MARKETING DIGITAL - RD STATION", :cnae_aliquota=>0.02, :cst=>"0"}, {:price=>750, :cnae_id=>"9177", :cnae_code=>"6204000", :cnae_desc=>"CONSULTORIA EM TECNOLOGIA DA INFORMAÇÃO E MARKETING DIGITAL - RD STATION", :cnae_aliquota=>0.02, :cst=>"0"}], :extra_info=>nil}
@@ -189,17 +190,9 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
 
   def get_city_info_from_zip(zip)
     response = HTTParty.get("http://api.postmon.com.br/v1/cep/#{zip}")
-    unless response.code == 200
-      errors.add(:zipcode, :invalid)
-      return nil
-    end
-
+    return nil unless response.code == 200
     parsed_response = response.parsed_response
-    if parsed_response['cidade_info'].blank?
-      errors.add(:zipcode, :invalid)
-      return nil
-    end
-
+    return nil if parsed_response['cidade_info'].blank?
     resp = response.parsed_response
     { "city" => resp["cidade"], "state" => resp["estado"], "city_ibge_code" => resp["cidade_info"]["codigo_ibge"], "source" => "postmon" }
   end
@@ -246,5 +239,10 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
   def zipcode_strip(zip)
     return unless zip
     zip.delete('.').delete('/').delete('-').delete(' ')
+  end
+
+  def validate_city_info
+    return if city_info
+    errors.add(:zipcode, :invalid)
   end
 end
