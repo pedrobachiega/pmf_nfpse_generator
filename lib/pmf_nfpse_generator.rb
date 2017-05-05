@@ -11,12 +11,12 @@ class PmfNfpseGenerator
 
   attr_accessor :config
   attr_accessor :cities
-  attr_accessor :cpf_cnpj, :name, :address, :zipcode, :state, :city, :email, :cfps, :billing_date, :items, :extra_info, :csrf, :irrf
+  attr_accessor :cpf_cnpj, :name, :address, :zipcode, :state, :city, :email, :cfps, :billing_date, :items, :extra_info, :csrf, :irrf, :city_info
 
   validates_presence_of :cpf_cnpj, :name, :address, :zipcode, :state, :city, :email, :billing_date, :items
   validate :billing_date_cannot_be_in_the_future
   validate :cpf_cnpj_format
-  validate :zipcode_in_postmon_api
+  validate :validate_city_info
 
   def initialize(attrs = {})
     # {:cpf_cnpj=>"13.372.575/0001-87", :name=>"SOCIALBASE SOLUCOES EM TECNOLOGIA LTDA", :address=>"Rod SC 401", :city=>"Florianópolis", :zipcode=>"88030-000", :state=>"SC", :email=>"pedro.bachiega-22@resultadosdigitais.com.br", :cfps=>nil, :items=>[{:price=>919, :cnae_id=>"9178", :cnae_code=>"6203100", :cnae_desc=>"SERVIÇO DE LICENCIAMENTO DE PROGRAMA DE MARKETING DIGITAL - RD STATION", :cnae_aliquota=>0.02, :cst=>"0"}, {:price=>750, :cnae_id=>"9177", :cnae_code=>"6204000", :cnae_desc=>"CONSULTORIA EM TECNOLOGIA DA INFORMAÇÃO E MARKETING DIGITAL - RD STATION", :cnae_aliquota=>0.02, :cst=>"0"}], :extra_info=>nil}
@@ -37,6 +37,7 @@ class PmfNfpseGenerator
     self.irrf = attrs[:irrf]
 
     self.extra_info = attrs[:extra_info]
+    self.city_info = get_city_info(zipcode.try(:gsub, ".", ""), state, city)
   end
 
   def configure
@@ -54,9 +55,8 @@ class PmfNfpseGenerator
 
   # {"city"=>"Curitiba", "state"=>"PR", "city_ibge_code"=>"4106902", "source"=>"csv"}
   def to_xml
-    return nil unless self.valid?
+    return nil unless valid?
 
-    city_info = get_city_info(zipcode.gsub(".",""), state, city)
     date = billing_date.try(:to_datetime).try(:strftime, '%Y-%m-%d')
 
     xml = Builder::XmlMarkup.new( :indent => 2 )
@@ -172,18 +172,27 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
     cpf_cnpj.gsub(".", "").gsub("/", "").gsub("-", "").gsub("_", "").gsub(" ", "")
   end
 
-  def get_city_info(cep, state = "", cityname = "")
-    state.strip!
-    cityname.strip!
-    cityname = (cityname.downcase == "brasilia") ? "brasília" : cityname
-    cityname = (cityname.downcase == "sao paulo") ? "são paulo" : cityname
-
-    city_info = nil
-    city_info = get_cities[state.downcase][cityname.downcase] if get_cities[state.downcase]
-    if city_info
-      return { "city" => city_info["Nome_Município"], "state" => city_info["UF"], "city_ibge_code" => city_info["UF_MUNIC"], "source" => "csv" }
+  def get_city_info(zip, state = "", cityname = "")
+    if state && cityname
+      state.strip!
+      cityname.strip!
+      cityname = (cityname.downcase == "brasilia") ? "brasília" : cityname
+      cityname = (cityname.downcase == "sao paulo") ? "são paulo" : cityname
+      city_info = nil
+      city_info = get_cities[state.downcase][cityname.downcase] if get_cities[state.downcase]
+      if city_info
+        return { "city" => city_info["Nome_Município"], "state" => city_info["UF"], "city_ibge_code" => city_info["UF_MUNIC"], "source" => "csv" }
+      end
     end
-    response = HTTParty.get("http://api.postmon.com.br/v1/cep/#{cep}")
+
+    get_city_info_from_zip(zip)
+  end
+
+  def get_city_info_from_zip(zip)
+    response = HTTParty.get("http://api.postmon.com.br/v1/cep/#{zip}")
+    return nil unless response.code == 200
+    parsed_response = response.parsed_response
+    return nil if parsed_response['cidade_info'].blank?
     resp = response.parsed_response
     { "city" => resp["cidade"], "state" => resp["estado"], "city_ibge_code" => resp["cidade_info"]["codigo_ibge"], "source" => "postmon" }
   end
@@ -227,21 +236,13 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
     end
   end
 
-  def zipcode_in_postmon_api
-    return unless zipcode.present?
-    return errors.add(:zipcode, :length) unless zipcode.size == 8
-    response = validate_zipcode_in_postmon_api(zipcode)
-    return errors.add(:zipcode, :invalid) unless response.code == 200
-    parsed_response = response.parsed_response
-    errors.add(:zipcode, :invalid) if parsed_response['cidade_info'].blank?
-  end
-
   def zipcode_strip(zip)
     return unless zip
     zip.delete('.').delete('/').delete('-').delete(' ')
   end
 
-  def validate_zipcode_in_postmon_api(cep)
-    HTTParty.get("http://api.postmon.com.br/v1/cep/#{cep}")
+  def validate_city_info
+    return if city_info
+    errors.add(:zipcode, :invalid)
   end
 end
