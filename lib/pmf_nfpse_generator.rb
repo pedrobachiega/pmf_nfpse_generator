@@ -52,14 +52,9 @@ class PmfNfpseGenerator
     I18n.default_locale = 'pt-BR'
   end
 
-  def city_info
-    return @city_info if @city_info
-    self.city_info = get_city_info(zipcode.try(:gsub, ".", ""), state, city)
-  end
-
   # {"city"=>"Curitiba", "state"=>"PR", "city_ibge_code"=>"4106902", "source"=>"csv"}
   def to_xml
-    return nil unless valid?
+    return nil if !valid? || !city_info
 
     date = billing_date.try(:to_datetime).try(:strftime, '%Y-%m-%d')
 
