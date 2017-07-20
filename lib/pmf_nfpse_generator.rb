@@ -236,7 +236,7 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
 
   def zipcode_strip(zip)
     return unless zip
-    zip.delete('.').delete('/').delete('-').delete(' ').delete('  ')
+    zip.delete('^0-9')
   end
 
   def validate_city_info

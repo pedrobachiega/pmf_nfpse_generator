@@ -70,8 +70,10 @@ describe PmfNfpseGenerator do
         let(:invalid_attrs) { attrs.merge(state: nil) }
 
         it do
-          expect(invalid_lib.to_xml).to be_falsey
-          expect(invalid_lib.errors[:state].size).to eq(1)
+          VCR.use_cassette('to_xml_validate_without_state') do
+            expect(invalid_lib.to_xml).to be_falsey
+            expect(invalid_lib.errors[:state].size).to eq(1)
+          end
         end
       end
 
@@ -79,8 +81,10 @@ describe PmfNfpseGenerator do
         let(:invalid_attrs) { attrs.merge(city: nil) }
 
         it do
-          expect(invalid_lib.to_xml).to be_falsey
-          expect(invalid_lib.errors[:city].size).to eq(1)
+          VCR.use_cassette('to_xml_validate_without_city') do
+            expect(invalid_lib.to_xml).to be_falsey
+            expect(invalid_lib.errors[:city].size).to eq(1)
+          end
         end
       end
 
@@ -146,7 +150,7 @@ describe PmfNfpseGenerator do
     it do
       zip_actual = '88.05/1 - 0.0.0  '
       zip_expected = '88051000'
-      expect(lib.zipcode_strip(zip_actual)).to eq(zip_expected)
+      expect(lib.send(:zipcode_strip, zip_actual)).to eq(zip_expected)
     end
   end
 end
