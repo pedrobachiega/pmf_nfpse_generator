@@ -1,4 +1,4 @@
-#coding: utf-8
+# coding: utf-8
 
 require 'csv'
 require 'builder'
@@ -37,7 +37,7 @@ class PmfNfpseGenerator
     self.irrf = attrs[:irrf]
 
     self.extra_info = attrs[:extra_info]
-    self.city_info = get_city_info(zipcode.try(:gsub, ".", ""), state, city)
+    self.city_info = get_city_info(zipcode, state, city)
   end
 
   def configure
@@ -59,29 +59,28 @@ class PmfNfpseGenerator
 
     date = billing_date.try(:to_datetime).try(:strftime, '%Y-%m-%d')
 
-    xml = Builder::XmlMarkup.new( :indent => 2 )
-    xml.instruct! :xml, :encoding => "UTF-8"
-    xml.InfRequisicao("xmlns" => "http://nfe.pmf.sc.gov.br/nfse/versao?tipo=xsd-2_0", "xmlns:dsig" => "http://www.w3.org/2000/09/xmldsig") do |root|
-      root.Versao "2.0"
-      root.TipoSistema "#{config.TipoSistema}"
-      root.Identificacao "#{config.Emissor_Identificacao}"
+    xml = Builder::XmlMarkup.new(indent: 2)
+    xml.instruct! :xml, encoding: 'UTF-8'
+    xml.InfRequisicao('xmlns' => 'http://nfe.pmf.sc.gov.br/nfse/versao?tipo=xsd-2_0', 'xmlns:dsig' => 'http://www.w3.org/2000/09/xmldsig') do |root|
+      root.Versao '2.0'
+      root.TipoSistema config.TipoSistema.to_s
+      root.Identificacao config.Emissor_Identificacao.to_s
       root.AEDF do |aedf|
-        aedf.AEDF "#{config.Emissor_AEDF}"
-        aedf.TipoAedf "#{config.Emissor_TipoAedf}"
+        aedf.AEDF config.Emissor_AEDF.to_s
+        aedf.TipoAedf config.Emissor_TipoAedf.to_s
       end
       root.DataEmissao "#{date}Z"
 
       # root.CFPS "#{cfps}"
-      if city_info["city"] == "#{config.Emissor_Cidade}"
-        root.CFPS "9201"
-      elsif city_info["state"] == "#{config.Emissor_Estado}"
-        root.CFPS "9202"
+      if city_info['city'] == config.Emissor_Cidade.to_s
+        root.CFPS '9201'
+      elsif city_info['state'] == config.Emissor_Estado.to_s
+        root.CFPS '9202'
       else
-        root.CFPS "9203"
+        root.CFPS '9203'
       end
 
       root.DadosServico do |servicos|
-
         total = 0
         issqn = 0
 
@@ -98,7 +97,7 @@ class PmfNfpseGenerator
             item.CST _item[:cst]
             item.Aliquota aliquota.round(2)
             item.ValorUnitario price.round(2)
-            item.Quantidade "1"
+            item.Quantidade '1'
             item.ValorTotal price.round(2)
           end
         end
@@ -111,18 +110,18 @@ class PmfNfpseGenerator
         # CSRF (4,65%)
         if csrf > 0
           _extra_info = "#{_extra_info}
-CSRF (4,65%): R$ #{csrf.round(2).to_s.gsub(".", ",")}"
+CSRF (4,65%): R$ #{csrf.round(2).to_s.tr('.', ',')}"
         end
         # IRRF (1,5%)
         if irrf > 0
           _extra_info = "#{_extra_info}
-IRRF (1,5%): R$ #{irrf.round(2).to_s.gsub(".", ",")}"
+IRRF (1,5%): R$ #{irrf.round(2).to_s.tr('.', ',')}"
         end
 
         # config.Impostos = { :pis => 0.0065; :cofins => 0.03; :iss => 0.02; :cprb => 0.02 }
         taxesV = config.Impostos[:pis] + config.Impostos[:cofins] + config.Impostos[:iss] + config.Impostos[:cprb]
-        taxesS = (total*taxesV).round(2).to_s.gsub(".", ",")
-        taxesV = (taxesV*100).round(2).to_s.gsub(".", ",")
+        taxesS = (total * taxesV).round(2).to_s.tr('.', ',')
+        taxesV = (taxesV * 100).round(2).to_s.tr('.', ',')
 
         _extra_info = "#{_extra_info}
 
@@ -135,11 +134,11 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
           identificacao.DocIdTomador do |doc|
             formated_cpf_cnpj = format_cpf_cnpj
 
-            #TODO
+            # TODO
             doc.CPFCNPJ do |cpfcnpj|
-              if (formated_cpf_cnpj.size == 14)
+              if formated_cpf_cnpj.size == 14
                 cpfcnpj.CNPJ formated_cpf_cnpj
-              elsif (formated_cpf_cnpj.size == 11)
+              elsif formated_cpf_cnpj.size == 11
                 cpfcnpj.CPF formated_cpf_cnpj
               end
             end
@@ -149,19 +148,18 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
         tomador.RazaoSocial name[0..79]
         tomador.Endereco do |endereco|
           endereco.Logradouro address[0..79]
-          endereco.Bairro ""
+          endereco.Bairro ''
           endereco.Municipio do |municipio|
-            municipio.CodigoMunicipio city_info["city_ibge_code"]
+            municipio.CodigoMunicipio city_info['city_ibge_code']
           end
           endereco.CodigoPostal do |codPostal|
-            codPostal.CEP zipcode.gsub(".", "").gsub("/", "").gsub("-", "").gsub(" ", "")
+            codPostal.CEP zipcode.delete('.').delete('/').delete('-').delete(' ')
           end
-          endereco.UF state.gsub(" ", "")
+          endereco.UF state.delete(' ')
         end # endereço
         tomador.Contato do |contato|
           contato.Email email[0..79]
         end
-
       end # tomador
     end # root
   end
@@ -169,19 +167,19 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
   private
 
   def format_cpf_cnpj
-    cpf_cnpj.gsub(".", "").gsub("/", "").gsub("-", "").gsub("_", "").gsub(" ", "")
+    cpf_cnpj.delete('.').delete('/').delete('-').delete('_').delete(' ')
   end
 
-  def get_city_info(zip, state = "", cityname = "")
+  def get_city_info(zip, state = '', cityname = '')
     if state && cityname
       state.strip!
       cityname.strip!
-      cityname = (cityname.downcase == "brasilia") ? "brasília" : cityname
-      cityname = (cityname.downcase == "sao paulo") ? "são paulo" : cityname
+      cityname = cityname.casecmp('brasilia').zero? ? 'brasília' : cityname
+      cityname = cityname.casecmp('sao paulo').zero? ? 'são paulo' : cityname
       city_info = nil
       city_info = get_cities[state.downcase][cityname.downcase] if get_cities[state.downcase]
       if city_info
-        return { "city" => city_info["Nome_Município"], "state" => city_info["UF"], "city_ibge_code" => city_info["UF_MUNIC"], "source" => "csv" }
+        return { 'city' => city_info['Nome_Município'], 'state' => city_info['UF'], 'city_ibge_code' => city_info['UF_MUNIC'], 'source' => 'csv' }
       end
     end
 
@@ -194,7 +192,7 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
     parsed_response = response.parsed_response
     return nil if parsed_response['cidade_info'].blank?
     resp = response.parsed_response
-    { "city" => resp["cidade"], "state" => resp["estado"], "city_ibge_code" => resp["cidade_info"]["codigo_ibge"], "source" => "postmon" }
+    { 'city' => resp['cidade'], 'state' => resp['estado'], 'city_ibge_code' => resp['cidade_info']['codigo_ibge'], 'source' => 'postmon' }
   end
 
   def get_cities
@@ -202,15 +200,15 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
   end
 
   def load_cities
-    contents =  File.read(filepath('cidades_brasil.csv'))
-    lines_parsed = CSV.parse(contents, { :col_sep => "," })
+    contents = File.read(filepath('cidades_brasil.csv'))
+    lines_parsed = CSV.parse(contents, col_sep: ',')
     # UF,UF_MUNIC,Nome_Município
 
     list = {}
     lines_parsed.each_with_index do |line, i|
-      if (i > 0 && !line.empty?)
-        list[line[0].downcase] = {} if list[line[0].downcase] == nil
-        list[line[0].downcase][line[2].downcase] = { "UF" => line[0], "UF_MUNIC" => line[1], "Nome_Município" => line[2] }
+      if i > 0 && !line.empty?
+        list[line[0].downcase] = {} if list[line[0].downcase].nil?
+        list[line[0].downcase][line[2].downcase] = { 'UF' => line[0], 'UF_MUNIC' => line[1], 'Nome_Município' => line[2] }
       end
     end
     list
@@ -238,7 +236,7 @@ Conforme lei federal 12.741/2012 da transparência, total impostos pagos R$ #{ta
 
   def zipcode_strip(zip)
     return unless zip
-    zip.delete('.').delete('/').delete('-').delete(' ')
+    zip.delete('.').delete('/').delete('-').delete(' ').delete('  ')
   end
 
   def validate_city_info
